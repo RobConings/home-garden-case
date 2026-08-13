@@ -9,14 +9,14 @@ export function PublicHeader() {
       spacing="none"
       className="sticky top-0 z-20 border-b border-[var(--rootly-border)] bg-[var(--rootly-background)]/90 backdrop-blur"
     >
-      <PageContainer className="flex h-24 items-center justify-between py-0">
+      <PageContainer className="flex h-28 items-center justify-between py-0">
         <Link to="/" aria-label="Rootly garden planner home">
           <img
-            src="/rootly.png"
+            src="/rootly-logo.png"
             alt="Rootly garden planner logo"
             width={1536}
-            height={1024}
-            className="h-16 w-auto max-w-[220px] rounded-md object-contain object-left sm:h-[72px]"
+            height={800}
+            className="h-20 w-auto max-w-[280px] object-contain object-left sm:h-24 sm:max-w-[340px]"
           />
         </Link>
         <PageRow as="nav" gap="sm" align="center">

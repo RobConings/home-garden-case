@@ -12,8 +12,8 @@ Use those variables for reusable components instead of hardcoded palette classes
 Core theme values:
 
 ```text
-Light: background #FAF8F3, surface #FFFFFF, text #182019, primary #2F8F46, secondary #8A5A3B, accent #E97828
-Dark:  background #101611, surface #182019, text #F6F7F3, primary #78C850, secondary #B9825A, accent #F49A55
+Light: background #FAF8F3, surface #FFFFFF, text #182019, primary #26783A, secondary #8A5A3B, accent #E97828
+Dark:  background #0F1110, surface #191C1A, text #F7F8F4, primary #8FDC66, secondary #D2A077, accent #FFAD66
 ```
 
 Reusable brand/theme components:
@@ -30,6 +30,7 @@ components/
   ui/
   shared/
   layout/
+providers/
 features/
   gardens/
     components/
@@ -139,6 +140,21 @@ Feature components may compose `components/ui`, `components/shared`, and `compon
 
 If a feature component becomes useful in multiple features, move it to `components/shared` and remove feature-specific assumptions from it.
 
+### `providers`
+
+Use `providers` for app-wide React context providers, hooks, and state coordinators that wrap route content.
+
+Examples:
+
+- `app-providers.tsx`
+- `theme-provider.tsx`
+- `i18n-provider.tsx`
+- `page-context-provider.tsx`
+
+Providers may expose hooks such as `useTheme`, `usePageContext`, or `useI18n`. Keep providers focused on state, callbacks, browser persistence, and context wiring. Do not put visual UI components in `providers`; keep those in `components/ui`, `components/shared`, `components/layout`, or feature folders.
+
+Compose global providers in `providers/app-providers.tsx`, then use that wrapper from `root.tsx`.
+
 ## Import Direction
 
 Keep dependencies flowing from specific to generic:
@@ -146,6 +162,8 @@ Keep dependencies flowing from specific to generic:
 ```text
 routes -> features -> components/shared -> components/ui
 routes -> features -> components/layout
+root -> providers
+components/shared -> providers
 ```
 
 Avoid imports in the opposite direction. In particular:
@@ -154,6 +172,7 @@ Avoid imports in the opposite direction. In particular:
 - `components/shared` should not import from `features`.
 - `components/layout` should not import from `features`.
 - Shared components should not know route paths unless they are explicitly navigation components.
+- Providers should not import feature components or route modules.
 
 ## Path Aliases
 
@@ -167,6 +186,7 @@ Configured aliases:
 @/features/*     -> apps/web/app/features/*
 @/hooks/*        -> apps/web/app/hooks/*
 @/lib/*          -> apps/web/app/lib/*
+@/providers/*    -> apps/web/app/providers/*
 @/routes/*       -> apps/web/app/routes/*
 @/types/*        -> apps/web/app/types/*
 ```

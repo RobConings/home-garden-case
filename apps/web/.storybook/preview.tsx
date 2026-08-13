@@ -1,4 +1,5 @@
 import type { Preview } from '@storybook/react-vite';
+import { AppProviders } from '@/providers';
 import '../app/styles/global.css';
 
 const preview: Preview = {
@@ -24,7 +25,9 @@ const preview: Preview = {
 
       return (
         <div data-theme={isDark ? 'dark' : 'light'} className={isDark ? 'dark' : ''}>
-          <Story />
+          <AppProviders>
+            <Story />
+          </AppProviders>
         </div>
       );
     },

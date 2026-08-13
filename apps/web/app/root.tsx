@@ -9,6 +9,7 @@ import {
   ScrollRestoration,
   useRouteError,
 } from '@remix-run/react';
+import { AppProviders } from '@/providers';
 import { Button } from '@/components/ui/button';
 import stylesheet from './styles/global.css?url';
 
@@ -65,7 +66,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        {children}
+        <AppProviders>{children}</AppProviders>
         <ScrollRestoration />
         <Scripts />
       </body>

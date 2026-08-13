@@ -23,6 +23,7 @@
       "@/features/*": ["apps/web/app/features/*"],
       "@/hooks/*": ["apps/web/app/hooks/*"],
       "@/lib/*": ["apps/web/app/lib/*"],
+      "@/providers/*": ["apps/web/app/providers/*"],
       "@/routes/*": ["apps/web/app/routes/*"],
       "@/types/*": ["apps/web/app/types/*"]
     },
