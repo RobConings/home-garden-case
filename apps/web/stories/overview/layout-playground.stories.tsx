@@ -5,6 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { StatCard } from '@/components/shared/stat-card';
+import { BrandMark } from '@/components/shared/brand-mark';
+import { ThemeToggle } from '@/components/shared/theme-toggle';
 import { AppShell } from '@/components/layout/app-shell';
 import { ContentSection } from '@/components/layout/content-section';
 import { PageContainer } from '@/components/layout/page-container';
@@ -335,8 +337,11 @@ export const DashboardLayout: Story = {
     <AppShell
       header={
         <PageContainer className="flex h-16 items-center justify-between py-0">
-          <strong className="text-sm text-slate-950">ITP Home Garden</strong>
-          <Button size="sm">Add garden</Button>
+          <BrandMark compact />
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <Button size="sm">Add garden</Button>
+          </div>
         </PageContainer>
       }
       sidebar={

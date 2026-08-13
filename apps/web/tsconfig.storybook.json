@@ -27,7 +27,8 @@
     "stories/**/*.stories.tsx",
     "stories/**/*.stories.mdx",
     ".storybook/*.js",
-    ".storybook/*.ts"
+    ".storybook/*.ts",
+    ".storybook/*.tsx"
   ],
   "references": [
     {

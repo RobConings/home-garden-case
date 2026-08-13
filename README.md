@@ -1,4 +1,4 @@
-# ITP Home Garden
+# Rootly
 
 Garden planner dashboard built with an Nx monorepo.
 

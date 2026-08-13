@@ -1,5 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { Button } from '@/components/ui/button';
+import { BrandMark } from '@/components/shared/brand-mark';
+import { ThemeToggle } from '@/components/shared/theme-toggle';
 import { PageContainer } from '@/components/layout/page-container';
 import { AppShell } from '@/components/layout/app-shell';
 
@@ -20,8 +22,11 @@ export const WithHeaderAndSidebar: Story = {
     <AppShell
       header={
         <PageContainer className="flex h-16 items-center justify-between py-0">
-          <strong className="text-sm text-slate-950">ITP Home Garden</strong>
-          <Button size="sm">Add garden</Button>
+          <BrandMark compact />
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <Button size="sm">Add garden</Button>
+          </div>
         </PageContainer>
       }
       sidebar={

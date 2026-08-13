@@ -2,6 +2,25 @@
 
 The Remix frontend uses a component structure that combines atomic design with feature-based ownership.
 
+## Brand And Theme
+
+The app name is Rootly.
+
+Rootly supports light and dark mode through CSS variables in `apps/web/app/styles/global.css`.
+Use those variables for reusable components instead of hardcoded palette classes.
+
+Core theme values:
+
+```text
+Light: background #FAF8F3, surface #FFFFFF, text #182019, primary #2F8F46, secondary #8A5A3B, accent #E97828
+Dark:  background #101611, surface #182019, text #F6F7F3, primary #78C850, secondary #B9825A, accent #F49A55
+```
+
+Reusable brand/theme components:
+
+- `components/shared/brand-mark.tsx`
+- `components/shared/theme-toggle.tsx`
+
 ## Folder Structure
 
 Use this structure inside `apps/web/app`:
@@ -71,6 +90,8 @@ Initial shared components:
 - `general-form.tsx`
 - `empty-state.tsx`
 - `stat-card.tsx`
+- `brand-mark.tsx`
+- `theme-toggle.tsx`
 
 ### `components/layout`
 

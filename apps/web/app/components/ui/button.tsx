@@ -9,12 +9,15 @@ export const buttonVariants = cva(
     variants: {
       variant: {
         primary:
-          'border-emerald-700 bg-emerald-700 text-white hover:border-emerald-800 hover:bg-emerald-800',
+          'border-[var(--rootly-primary)] bg-[var(--rootly-primary)] text-white hover:border-[var(--rootly-primary-hover)] hover:bg-[var(--rootly-primary-hover)]',
         secondary:
-          'border-slate-200 bg-white text-slate-900 hover:border-slate-300 hover:bg-slate-50',
-        subtle: 'border-transparent bg-emerald-50 text-emerald-900 hover:bg-emerald-100',
-        ghost: 'border-transparent bg-transparent text-slate-700 hover:bg-slate-100',
-        danger: 'border-red-700 bg-red-700 text-white hover:border-red-800 hover:bg-red-800',
+          'border-[var(--rootly-border)] bg-[var(--rootly-surface)] text-[var(--rootly-text)] hover:bg-[var(--rootly-surface-muted)]',
+        subtle:
+          'border-transparent bg-[var(--rootly-primary-soft)] text-[var(--rootly-primary)] hover:bg-[var(--rootly-secondary-soft)]',
+        ghost:
+          'border-transparent bg-transparent text-[var(--rootly-text-muted)] hover:bg-[var(--rootly-surface-muted)]',
+        danger:
+          'border-[var(--rootly-danger)] bg-[var(--rootly-danger)] text-white hover:brightness-95',
       },
       size: {
         sm: 'h-8 px-3 text-xs',

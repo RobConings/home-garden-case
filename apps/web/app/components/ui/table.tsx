@@ -10,22 +10,24 @@ export function Table({ className, ...props }: HTMLAttributes<HTMLTableElement>)
 }
 
 export function TableHeader({ className, ...props }: HTMLAttributes<HTMLTableSectionElement>) {
-  return <thead className={cn('border-b border-slate-200', className)} {...props} />;
+  return <thead className={cn('border-b border-[var(--rootly-border)]', className)} {...props} />;
 }
 
 export function TableBody({ className, ...props }: HTMLAttributes<HTMLTableSectionElement>) {
-  return <tbody className={cn('divide-y divide-slate-100', className)} {...props} />;
+  return <tbody className={cn('divide-y divide-[var(--rootly-border)]', className)} {...props} />;
 }
 
 export function TableRow({ className, ...props }: HTMLAttributes<HTMLTableRowElement>) {
-  return <tr className={cn('transition-colors hover:bg-slate-50', className)} {...props} />;
+  return (
+    <tr className={cn('transition-colors hover:bg-[var(--rootly-surface-muted)]', className)} {...props} />
+  );
 }
 
 export function TableHead({ className, ...props }: ThHTMLAttributes<HTMLTableCellElement>) {
   return (
     <th
       className={cn(
-        'h-11 px-4 text-left align-middle text-xs font-semibold uppercase tracking-wide text-slate-500',
+        'h-11 px-4 text-left align-middle text-xs font-semibold uppercase tracking-wide text-[var(--rootly-text-muted)]',
         className,
       )}
       {...props}
@@ -34,5 +36,7 @@ export function TableHead({ className, ...props }: ThHTMLAttributes<HTMLTableCel
 }
 
 export function TableCell({ className, ...props }: TdHTMLAttributes<HTMLTableCellElement>) {
-  return <td className={cn('px-4 py-3 align-middle text-slate-700', className)} {...props} />;
+  return (
+    <td className={cn('px-4 py-3 align-middle text-[var(--rootly-text-muted)]', className)} {...props} />
+  );
 }

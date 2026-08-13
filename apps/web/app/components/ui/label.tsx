@@ -7,7 +7,7 @@ export type LabelProps = ComponentPropsWithoutRef<typeof LabelPrimitive.Root>;
 export function Label({ className, ...props }: LabelProps) {
   return (
     <LabelPrimitive.Root
-      className={cn('text-sm font-medium leading-none text-slate-800', className)}
+      className={cn('text-sm font-medium leading-none text-[var(--rootly-text)]', className)}
       {...props}
     />
   );

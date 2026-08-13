@@ -8,15 +8,18 @@ export type AppShellProps = HTMLAttributes<HTMLDivElement> & {
 
 export function AppShell({ className, header, sidebar, children, ...props }: AppShellProps) {
   return (
-    <div className={cn('min-h-screen bg-slate-50 text-slate-950', className)} {...props}>
+    <div
+      className={cn('min-h-screen bg-[var(--rootly-background)] text-[var(--rootly-text)]', className)}
+      {...props}
+    >
       {header ? (
-        <header className="sticky top-0 z-10 border-b border-slate-200 bg-white/95 backdrop-blur">
+        <header className="sticky top-0 z-10 border-b border-[var(--rootly-border)] bg-[var(--rootly-surface)]/95 backdrop-blur">
           {header}
         </header>
       ) : null}
       <div className="flex min-h-[calc(100vh-64px)]">
         {sidebar ? (
-          <aside className="hidden w-64 shrink-0 border-r border-slate-200 bg-white lg:block">
+          <aside className="hidden w-64 shrink-0 border-r border-[var(--rootly-border)] bg-[var(--rootly-surface)] lg:block">
             {sidebar}
           </aside>
         ) : null}

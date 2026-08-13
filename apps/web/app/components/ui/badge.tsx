@@ -7,11 +7,15 @@ export const badgeVariants = cva(
   {
     variants: {
       variant: {
-        neutral: 'border-slate-200 bg-slate-50 text-slate-700',
-        success: 'border-emerald-200 bg-emerald-50 text-emerald-800',
-        warning: 'border-amber-200 bg-amber-50 text-amber-800',
-        danger: 'border-red-200 bg-red-50 text-red-800',
-        info: 'border-sky-200 bg-sky-50 text-sky-800',
+        neutral:
+          'border-[var(--rootly-border)] bg-[var(--rootly-surface-muted)] text-[var(--rootly-text-muted)]',
+        success:
+          'border-[var(--rootly-primary)]/25 bg-[var(--rootly-primary-soft)] text-[var(--rootly-primary)]',
+        warning:
+          'border-[var(--rootly-accent)]/25 bg-[var(--rootly-accent-soft)] text-[var(--rootly-accent)]',
+        danger:
+          'border-[var(--rootly-danger)]/25 bg-[var(--rootly-danger-soft)] text-[var(--rootly-danger)]',
+        info: 'border-[var(--rootly-secondary)]/25 bg-[var(--rootly-secondary-soft)] text-[var(--rootly-secondary)]',
       },
     },
     defaultVariants: {

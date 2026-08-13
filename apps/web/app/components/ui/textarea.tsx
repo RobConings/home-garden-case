@@ -7,7 +7,7 @@ export function Textarea({ className, ...props }: TextareaProps) {
   return (
     <textarea
       className={cn(
-        'min-h-24 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-950 shadow-sm transition-colors placeholder:text-slate-400 focus:border-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-700/15 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-500',
+        'min-h-24 w-full rounded-md border border-[var(--rootly-border)] bg-[var(--rootly-surface)] px-3 py-2 text-sm text-[var(--rootly-text)] shadow-sm transition-colors placeholder:text-[var(--rootly-text-muted)] focus:border-[var(--rootly-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--rootly-primary)]/15 disabled:cursor-not-allowed disabled:bg-[var(--rootly-surface-muted)] disabled:text-[var(--rootly-text-muted)]',
         className,
       )}
       {...props}

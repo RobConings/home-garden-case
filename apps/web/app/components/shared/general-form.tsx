@@ -17,18 +17,27 @@ export function GeneralForm({
 }: GeneralFormProps) {
   return (
     <form
-      className={cn('rounded-lg border border-slate-200 bg-white shadow-sm', className)}
+      className={cn(
+        'rounded-lg border border-[var(--rootly-border)] bg-[var(--rootly-surface)] shadow-sm',
+        className,
+      )}
       {...props}
     >
       {title || description ? (
-        <div className="border-b border-slate-200 p-5">
-          {title ? <h3 className="text-base font-semibold text-slate-950">{title}</h3> : null}
-          {description ? <p className="mt-1 text-sm leading-6 text-slate-600">{description}</p> : null}
+        <div className="border-b border-[var(--rootly-border)] p-5">
+          {title ? (
+            <h3 className="text-base font-semibold text-[var(--rootly-text)]">{title}</h3>
+          ) : null}
+          {description ? (
+            <p className="mt-1 text-sm leading-6 text-[var(--rootly-text-muted)]">
+              {description}
+            </p>
+          ) : null}
         </div>
       ) : null}
       <div className="grid gap-5 p-5">{children}</div>
       {footer ? (
-        <div className="flex items-center justify-end gap-2 border-t border-slate-200 p-5">
+        <div className="flex items-center justify-end gap-2 border-t border-[var(--rootly-border)] p-5">
           {footer}
         </div>
       ) : null}

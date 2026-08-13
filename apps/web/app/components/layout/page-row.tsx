@@ -1,5 +1,5 @@
 import { cva, type VariantProps } from 'class-variance-authority';
-import type { HTMLAttributes } from 'react';
+import type { ElementType, HTMLAttributes } from 'react';
 import { cn } from '@/lib/utils';
 
 const pageRowVariants = cva('flex flex-wrap', {
@@ -23,8 +23,10 @@ const pageRowVariants = cva('flex flex-wrap', {
 });
 
 export type PageRowProps = HTMLAttributes<HTMLDivElement> &
-  VariantProps<typeof pageRowVariants>;
+  VariantProps<typeof pageRowVariants> & {
+    as?: ElementType;
+  };
 
-export function PageRow({ className, gap, align, ...props }: PageRowProps) {
-  return <div className={cn(pageRowVariants({ gap, align }), className)} {...props} />;
+export function PageRow({ className, gap, align, as: Comp = 'div', ...props }: PageRowProps) {
+  return <Comp className={cn(pageRowVariants({ gap, align }), className)} {...props} />;
 }

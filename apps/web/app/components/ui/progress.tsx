@@ -15,11 +15,14 @@ export function Progress({ className, value, max = 100, ...props }: ProgressProp
       aria-valuemin={0}
       aria-valuemax={max}
       aria-valuenow={value}
-      className={cn('h-2 w-full overflow-hidden rounded-full bg-slate-100', className)}
+      className={cn(
+        'h-2 w-full overflow-hidden rounded-full bg-[var(--rootly-surface-muted)]',
+        className,
+      )}
       {...props}
     >
       <div
-        className="h-full rounded-full bg-emerald-700 transition-[width]"
+        className="h-full rounded-full bg-[var(--rootly-primary)] transition-[width]"
         style={{ width: `${percentage}%` }}
       />
     </div>
