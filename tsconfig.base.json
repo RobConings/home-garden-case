@@ -16,6 +16,16 @@
     "skipLibCheck": true,
     "strict": true,
     "target": "es2022",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["apps/web/app/*"],
+      "@/components/*": ["apps/web/app/components/*"],
+      "@/features/*": ["apps/web/app/features/*"],
+      "@/hooks/*": ["apps/web/app/hooks/*"],
+      "@/lib/*": ["apps/web/app/lib/*"],
+      "@/routes/*": ["apps/web/app/routes/*"],
+      "@/types/*": ["apps/web/app/types/*"]
+    },
     "customConditions": ["@itp-home-garden/source"]
   }
 }

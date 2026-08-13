@@ -1,0 +1,22 @@
+import type { Meta, StoryObj } from '@storybook/react';
+import { Textarea } from '@/components/ui/textarea';
+
+const meta = {
+  title: 'UI/Textarea',
+  component: Textarea,
+  args: {
+    placeholder: 'South-facing raised beds near the terrace...',
+  },
+} satisfies Meta<typeof Textarea>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};
+
+export const WithValue: Story = {
+  args: {
+    value: 'Receives morning sun and partial afternoon shade.',
+  },
+};

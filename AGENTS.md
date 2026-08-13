@@ -20,3 +20,15 @@ If the user wants help with fixing an error in their CI pipeline, use the follow
 
 
 <!-- nx configuration end-->
+
+# Frontend Component Architecture
+
+- Follow the project frontend architecture documented in `docs/frontend-architecture.md`.
+- The Remix frontend combines atomic design with feature-based ownership.
+- Put low-level primitives in `apps/web/app/components/ui`.
+- Put reusable composed components in `apps/web/app/components/shared`.
+- Put structural layout components in `apps/web/app/components/layout`.
+- Put feature-specific components in `apps/web/app/features/<feature>/components`.
+- Do not place new components directly in a generic `components` root.
+- Put Storybook stories in `apps/web/stories`, mirroring the component architecture and filenames. Do not place `.stories.tsx` files inside `apps/web/app/components`.
+- Storybook stories must use mock data instead of live backend calls.
