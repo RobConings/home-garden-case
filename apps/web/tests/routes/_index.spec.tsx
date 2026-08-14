@@ -2,12 +2,17 @@ import { createRemixStub } from '@remix-run/testing';
 import { render } from '@testing-library/react';
 import { screen } from '@testing-library/dom';
 import Index from '../../app/routes/_index';
+import { AppProviders } from '../../app/providers';
 
 test('renders Rootly landing page', async () => {
   const RemixStub = createRemixStub([
     {
       path: '/',
-      Component: Index,
+      Component: () => (
+        <AppProviders user={null}>
+          <Index />
+        </AppProviders>
+      ),
     },
   ]);
 

@@ -9,7 +9,7 @@ describe('CareOverview', () => {
     expect(screen.getByRole('heading', { name: 'Care plan' })).toBeInTheDocument();
     expect(screen.getByText('Water today')).toBeInTheDocument();
     expect(screen.getByText('Average sun')).toBeInTheDocument();
-    expect(screen.getByText('Nutrition')).toBeInTheDocument();
+    expect(screen.getByText('Due tomorrow')).toBeInTheDocument();
 
     const tomatoCard = screen.getByRole('heading', { name: 'Tomato' }).closest('.rounded-lg');
     expect(tomatoCard).not.toBeNull();
