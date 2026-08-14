@@ -50,6 +50,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
         id: String(plant.gardenEditorPlantId),
         persistedId: plant.gardenEditorPlantId,
         plantLibraryId: plant.plantLibraryId,
+        size: normalizePlantSize(plant.size),
         x: plant.x,
         y: plant.y,
       })),
@@ -89,6 +90,7 @@ export async function action({ params, request }: ActionFunctionArgs) {
     const savedPlants = await replaceGardenEditorPlants(gardenId, {
       plants: plants.map((plant) => ({
         plantLibraryId: plant.plantLibraryId,
+        size: plant.size,
         x: plant.x,
         y: plant.y,
       })),
@@ -101,6 +103,7 @@ export async function action({ params, request }: ActionFunctionArgs) {
         id: String(plant.gardenEditorPlantId),
         persistedId: plant.gardenEditorPlantId,
         plantLibraryId: plant.plantLibraryId,
+        size: normalizePlantSize(plant.size),
         x: plant.x,
         y: plant.y,
       })),
@@ -170,12 +173,14 @@ function readPlantsPayload(formData: FormData): PlacedPlant[] {
 
   return rawPlants.map((plant) => {
     const plantLibraryId = Number(plant.plantLibraryId);
+    const size = Number(plant.size ?? 1);
     const x = Number(plant.x);
     const y = Number(plant.y);
 
     if (
       !Number.isInteger(plantLibraryId) ||
       plantLibraryId <= 0 ||
+      !isPlantSize(size) ||
       !Number.isFinite(x) ||
       !Number.isFinite(y) ||
       x < 0 ||
@@ -187,6 +192,7 @@ function readPlantsPayload(formData: FormData): PlacedPlant[] {
     return {
       id: String(plant.id || 'plant'),
       plantLibraryId,
+      size,
       x,
       y,
     };
@@ -204,8 +210,15 @@ function validateShapeBounds(garden: Garden, shapes: GardenEditorShape[]) {
 }
 
 function validatePlantBounds(garden: Garden, plants: PlacedPlant[]) {
+  const gridStepMeters = Math.max((garden.gridSizeCm || 25) / 100, 0.05);
+
   for (const plant of plants) {
-    if (plant.x > garden.totalWidth || plant.y > garden.totalHeight) {
+    const footprintMeters = plant.size * gridStepMeters;
+
+    if (
+      plant.x + footprintMeters > garden.totalWidth + 0.0001 ||
+      plant.y + footprintMeters > garden.totalHeight + 0.0001
+    ) {
       throw new Error('Garden editor plants must stay inside the garden dimensions.');
     }
   }
@@ -213,4 +226,12 @@ function validatePlantBounds(garden: Garden, plants: PlacedPlant[]) {
 
 function isShapeType(value: unknown): value is EditorShapeType {
   return ['blocking_building', 'pathway', 'grass', 'plant_area'].includes(String(value));
+}
+
+function isPlantSize(value: number): value is PlacedPlant['size'] {
+  return Number.isInteger(value) && value >= 1 && value <= 3;
+}
+
+function normalizePlantSize(value: number): PlacedPlant['size'] {
+  return isPlantSize(value) ? value : 1;
 }

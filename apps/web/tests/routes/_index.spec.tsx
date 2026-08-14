@@ -3,7 +3,7 @@ import { render } from '@testing-library/react';
 import { screen } from '@testing-library/dom';
 import Index from '../../app/routes/_index';
 
-test('renders loader data', async () => {
+test('renders Rootly landing page', async () => {
   const RemixStub = createRemixStub([
     {
       path: '/',
@@ -13,5 +13,10 @@ test('renders loader data', async () => {
 
   render(<RemixStub />);
 
-  await screen.findByText('Hello there,');
+  expect(await screen.findByRole('heading', { name: 'Rootly' })).toBeInTheDocument();
+  expect(screen.getByText('Garden planning, without guesswork')).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'Start planning' })).toHaveAttribute(
+    'href',
+    '/register',
+  );
 });

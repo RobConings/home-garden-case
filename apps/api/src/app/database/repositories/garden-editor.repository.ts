@@ -18,6 +18,7 @@ export type GardenEditorShapeWithPoints = {
 export type GardenEditorPlantPlacement = {
   gardenEditorPlantId: number;
   plantLibraryId: number;
+  size: number;
   x: number;
   y: number;
 };
@@ -120,7 +121,7 @@ export class GardenEditorRepository {
     return await this.db
       .selectFrom('gardenEditorPlant')
       .where('gardenId', '=', gardenId)
-      .select(['gardenEditorPlantId', 'plantLibraryId', 'x', 'y'])
+      .select(['gardenEditorPlantId', 'plantLibraryId', 'size', 'x', 'y'])
       .orderBy('gardenEditorPlantId', 'asc')
       .execute();
   }
@@ -129,6 +130,7 @@ export class GardenEditorRepository {
     gardenId: number,
     plants: Array<{
       plantLibraryId: number;
+      size: number;
       x: number;
       y: number;
     }>,
@@ -143,6 +145,7 @@ export class GardenEditorRepository {
       const newPlants: NewGardenEditorPlant[] = plants.map((plant) => ({
         gardenId,
         plantLibraryId: plant.plantLibraryId,
+        size: plant.size,
         x: plant.x,
         y: plant.y,
       }));

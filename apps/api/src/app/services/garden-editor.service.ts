@@ -1,4 +1,4 @@
-import { Garden, PlantLibrary } from '../database/types';
+import { Garden } from '../database/types';
 import { GardenRepository } from '../database/repositories/garden.repository';
 import {
   GardenEditorRepository,
@@ -62,10 +62,10 @@ export class GardenEditorService {
     const validatedData = replaceGardenEditorPlantsSchema.parse(data);
     const shapes = await this.gardenEditorRepository.findByGardenId(gardenId);
     const plantAreas = shapes.filter((shape) => shape.shapeType === 'plant_area');
-    const libraryPlants = new Map<number, PlantLibrary>();
+    const gridStepMeters = Math.max((garden.gridSizeCm || 25) / 100, 0.05);
 
     for (const plant of validatedData.plants) {
-      if (plant.x > garden.totalWidth || plant.y > garden.totalHeight) {
+      if (!isPlantFootprintInsideGarden(plant, garden, gridStepMeters)) {
         throw new ValidationError('Garden editor plants must stay inside the garden dimensions');
       }
 
@@ -76,16 +76,13 @@ export class GardenEditorService {
         );
       }
 
-      libraryPlants.set(plant.plantLibraryId, libraryPlant);
-
-      if (!plantAreas.some((shape) => isPointInPolygon(plant, shape.points))) {
+      if (!isPlantFootprintInsidePlantArea(plant, plantAreas, gridStepMeters)) {
         throw new ValidationError('Garden editor plants must stay inside a plant area');
       }
     }
 
     for (let index = 0; index < validatedData.plants.length; index += 1) {
       const plant = validatedData.plants[index];
-      const plantRadius = getPlantSpacingRadiusMeters(libraryPlants.get(plant.plantLibraryId));
 
       for (
         let compareIndex = index + 1;
@@ -93,13 +90,9 @@ export class GardenEditorService {
         compareIndex += 1
       ) {
         const otherPlant = validatedData.plants[compareIndex];
-        const otherPlantRadius = getPlantSpacingRadiusMeters(
-          libraryPlants.get(otherPlant.plantLibraryId),
-        );
-        const distance = Math.hypot(plant.x - otherPlant.x, plant.y - otherPlant.y);
 
-        if (distance < plantRadius + otherPlantRadius) {
-          throw new ValidationError('Garden editor plant spacing boundaries cannot overlap');
+        if (doPlantFootprintsOverlap(plant, otherPlant, gridStepMeters)) {
+          throw new ValidationError('Garden editor plant grid spaces cannot overlap');
         }
       }
     }
@@ -131,8 +124,59 @@ export class GardenEditorService {
   }
 }
 
-function getPlantSpacingRadiusMeters(plant: PlantLibrary | undefined) {
-  return Math.max((plant?.spacingCm ?? 30) / 100 / 2, 0.15);
+function isPlantFootprintInsideGarden(
+  plant: { x: number; y: number; size: number },
+  garden: Garden,
+  gridStepMeters: number,
+) {
+  const footprintMeters = plant.size * gridStepMeters;
+
+  return (
+    plant.x >= 0 &&
+    plant.y >= 0 &&
+    plant.x + footprintMeters <= garden.totalWidth + 0.0001 &&
+    plant.y + footprintMeters <= garden.totalHeight + 0.0001
+  );
+}
+
+function isPlantFootprintInsidePlantArea(
+  plant: { x: number; y: number; size: number },
+  plantAreas: GardenEditorShapeWithPoints[],
+  gridStepMeters: number,
+) {
+  const samplePoints = getPlantFootprintSamplePoints(plant, gridStepMeters);
+
+  return plantAreas.some((plantArea) =>
+    samplePoints.every((point) => isPointInPolygon(point, plantArea.points)),
+  );
+}
+
+function getPlantFootprintSamplePoints(
+  plant: { x: number; y: number; size: number },
+  gridStepMeters: number,
+) {
+  return Array.from({ length: plant.size }).flatMap((_, columnIndex) =>
+    Array.from({ length: plant.size }).map((__, rowIndex) => ({
+      x: plant.x + columnIndex * gridStepMeters + gridStepMeters / 2,
+      y: plant.y + rowIndex * gridStepMeters + gridStepMeters / 2,
+    })),
+  );
+}
+
+function doPlantFootprintsOverlap(
+  plant: { x: number; y: number; size: number },
+  otherPlant: { x: number; y: number; size: number },
+  gridStepMeters: number,
+) {
+  const plantSizeMeters = plant.size * gridStepMeters;
+  const otherPlantSizeMeters = otherPlant.size * gridStepMeters;
+
+  return (
+    plant.x < otherPlant.x + otherPlantSizeMeters - 0.0001 &&
+    plant.x + plantSizeMeters > otherPlant.x + 0.0001 &&
+    plant.y < otherPlant.y + otherPlantSizeMeters - 0.0001 &&
+    plant.y + plantSizeMeters > otherPlant.y + 0.0001
+  );
 }
 
 function isPointInPolygon(

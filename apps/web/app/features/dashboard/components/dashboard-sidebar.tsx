@@ -14,7 +14,7 @@ const navItems = [
   { label: 'Dashboard', to: '/dashboard', icon: LayoutDashboard, activePath: '/dashboard' },
   { label: 'Gardens', to: '/dashboard/gardens', icon: Sprout, activePath: '/dashboard/gardens' },
   { label: 'Plants', to: '/dashboard/plants', icon: Flower2, activePath: '/dashboard/plants' },
-  { label: 'Care', to: '/dashboard', icon: CalendarDays },
+  { label: 'Care', to: '/dashboard/care', icon: CalendarDays, activePath: '/dashboard/care' },
 ];
 
 export function DashboardSidebar({

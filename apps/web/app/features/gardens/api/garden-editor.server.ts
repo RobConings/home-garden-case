@@ -20,6 +20,7 @@ export type GardenEditorShape = {
 export type GardenEditorPlant = {
   gardenEditorPlantId: number;
   plantLibraryId: number;
+  size: number;
   x: number;
   y: number;
 };
@@ -34,6 +35,7 @@ export type ReplaceGardenEditorShapesPayload = {
 export type ReplaceGardenEditorPlantsPayload = {
   plants: Array<{
     plantLibraryId: number;
+    size: number;
     x: number;
     y: number;
   }>;

@@ -73,6 +73,7 @@ export interface GardenEditorPlantTable {
   gardenEditorPlantId: Generated<number>;
   gardenId: number;
   plantLibraryId: number;
+  size: number;
   x: number;
   y: number;
   createdAt: ColumnType<Date, string | undefined, never>;

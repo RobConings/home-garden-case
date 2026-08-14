@@ -1,9 +1,10 @@
 import { Link, useFetcher, useLoaderData } from '@remix-run/react';
-import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowLeft,
   Check,
   Eraser,
+  Monitor,
   MousePointer2,
   Plus,
   Save,
@@ -41,6 +42,7 @@ export type PlacedPlant = {
   id: string;
   persistedId?: number;
   plantLibraryId: number;
+  size: PlantSize;
   x: number;
   y: number;
 };
@@ -65,6 +67,7 @@ type SelectedPoint = {
 };
 
 type EditorMode = 'create' | 'select' | 'plant';
+export type PlantSize = 1 | 2 | 3;
 
 type CanvasSize = {
   width: number;
@@ -135,10 +138,12 @@ export function GardenEditor({ garden }: { garden: Garden }) {
   const [selectedPlantLibraryId, setSelectedPlantLibraryId] = useState(
     plantLibrary[0]?.plantLibraryId ?? 0,
   );
+  const [selectedPlantSize, setSelectedPlantSize] = useState<PlantSize>(1);
   const [selectedPlacedPlantId, setSelectedPlacedPlantId] = useState<string | null>(null);
   const [selectedShapeId, setSelectedShapeId] = useState<string | null>(null);
   const [selectedPoint, setSelectedPoint] = useState<SelectedPoint | null>(null);
   const [sunTime, setSunTime] = useState(12);
+  const [showSun, setShowSun] = useState(true);
   const [canvasSize, setCanvasSize] = useState<CanvasSize>(defaultCanvasSize);
   const [canvasTheme, setCanvasTheme] = useState<CanvasTheme>(getCanvasTheme);
   const metrics = useMemo(() => createEditorMetrics(garden, canvasSize), [canvasSize, garden]);
@@ -289,29 +294,31 @@ export function GardenEditor({ garden }: { garden: Garden }) {
       return;
     }
 
-    if (!isPointInsidePlantArea(point, shapes)) {
+    const plant = {
+      id: createShapeId(),
+      plantLibraryId: selectedPlantLibraryEntry.plantLibraryId,
+      size: selectedPlantSize,
+      x: point.x,
+      y: point.y,
+    };
+
+    if (!isPlantPlacementInsideGarden(plant, metrics)) {
+      showError('That plant size does not fit inside the garden.');
+      return;
+    }
+
+    if (!isPlantFootprintInsidePlantArea(plant, shapes, metrics)) {
       showError('Plants can only be placed inside plant areas.');
       return;
     }
 
-    if (
-      doesPlantSpacingOverlap(point, selectedPlantLibraryEntry, placedPlants, plantLibrary)
-    ) {
-      showError('That plant spacing overlaps another plant.');
+    if (doesPlantFootprintOverlap(plant, placedPlants, metrics)) {
+      showError('That plant grid space overlaps another plant.');
       return;
     }
 
-    const id = createShapeId();
-    setPlacedPlants((currentPlants) => [
-      ...currentPlants,
-      {
-        id,
-        plantLibraryId: selectedPlantLibraryEntry.plantLibraryId,
-        x: point.x,
-        y: point.y,
-      },
-    ]);
-    setSelectedPlacedPlantId(id);
+    setPlacedPlants((currentPlants) => [...currentPlants, plant]);
+    setSelectedPlacedPlantId(plant.id);
     setSelectedShapeId(null);
     setSelectedPoint(null);
   }
@@ -349,6 +356,35 @@ export function GardenEditor({ garden }: { garden: Garden }) {
     );
   }
 
+  function movePlant(plantId: string, point: GardenPoint) {
+    const plant = placedPlants.find((currentPlant) => currentPlant.id === plantId);
+
+    if (!plant) {
+      return false;
+    }
+
+    const nextPlant = {
+      ...plant,
+      ...point,
+    };
+
+    if (
+      !isPlantPlacementInsideGarden(nextPlant, metrics) ||
+      !isPlantFootprintInsidePlantArea(nextPlant, shapes, metrics) ||
+      doesPlantFootprintOverlap(nextPlant, placedPlants, metrics, plantId)
+    ) {
+      showError('That plant grid space is already occupied or outside a plant area.');
+      return false;
+    }
+
+    setPlacedPlants((currentPlants) =>
+      currentPlants.map((currentPlant) =>
+        currentPlant.id === plantId ? nextPlant : currentPlant,
+      ),
+    );
+    return true;
+  }
+
   function saveShapes() {
     const formData = new FormData();
     formData.set('shapes', JSON.stringify(shapes));
@@ -359,7 +395,7 @@ export function GardenEditor({ garden }: { garden: Garden }) {
   return (
     <PageContainer
       minHeight="content"
-      className="box-border flex h-[calc(100vh-64px)] max-w-none flex-col gap-4 overflow-hidden py-4"
+      className="box-border flex min-h-[calc(100vh-64px)] max-w-none flex-col gap-4 py-4 xl:h-[calc(100vh-64px)] xl:overflow-hidden"
     >
       <div className="flex shrink-0 flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
@@ -382,7 +418,29 @@ export function GardenEditor({ garden }: { garden: Garden }) {
         </Button>
       </div>
 
-      <Card className="flex min-h-0 flex-1 flex-col overflow-hidden">
+      <Card className="xl:hidden">
+        <CardContent className="grid gap-4 p-5">
+          <div className="flex h-12 w-12 items-center justify-center rounded-md bg-[var(--rootly-primary-soft)] text-[var(--rootly-primary)]">
+            <Monitor aria-hidden="true" className="h-6 w-6" />
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold text-[var(--rootly-text)]">
+              Editor available on larger screens
+            </h2>
+            <p className="mt-2 text-sm leading-6 text-[var(--rootly-text-muted)]">
+              Use a desktop or a wider browser window to draw garden zones and place plants.
+            </p>
+          </div>
+          <Button asChild variant="secondary">
+            <Link to="/dashboard/gardens">
+              <ArrowLeft aria-hidden="true" className="h-4 w-4" />
+              Gardens
+            </Link>
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card className="hidden min-h-0 flex-1 flex-col overflow-hidden xl:flex">
         <CardHeader className="border-b border-[var(--rootly-border)] p-4">
           <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
             <div className="min-w-0">
@@ -456,19 +514,21 @@ export function GardenEditor({ garden }: { garden: Garden }) {
                 sunDirection={garden.sunDirection}
                 sunTime={sunTime}
                 shapes={shapes}
-                plantLibrary={plantLibrary}
                 placedPlants={placedPlants}
                 draftPoints={draftPoints}
                 activeType={activeType}
+                showSun={showSun}
                 selectedPlacedPlantId={selectedPlacedPlantId}
                 selectedShapeId={selectedShapeId}
                 selectedPoint={selectedPoint}
+                onSunTimeChange={setSunTime}
                 onAddPoint={addDraftPoint}
                 onPlacePlant={placePlant}
                 onSelectPlacedPlant={selectPlacedPlant}
                 onSelectShape={selectShape}
                 onSelectPoint={selectPoint}
                 onMovePoint={movePoint}
+                onMovePlant={movePlant}
               />
             ) : (
               <div className="grid h-full place-items-center text-sm text-[var(--rootly-text-muted)]">
@@ -606,9 +666,36 @@ export function GardenEditor({ garden }: { garden: Garden }) {
                     </label>
                     <p className="text-xs text-[var(--rootly-text-muted)]">
                       {selectedPlantLibraryEntry
-                        ? `${formatSpacing(selectedPlantLibraryEntry)} spacing boundary`
+                        ? `${selectedPlantSize} x ${selectedPlantSize} grid ${
+                            selectedPlantSize === 1 ? 'cell' : 'cells'
+                          }`
                         : 'No plants available'}
                     </p>
+                    <div
+                      aria-label="Plant size"
+                      className="grid grid-cols-3 gap-1 rounded-md border border-[var(--rootly-border)] bg-[var(--rootly-surface-muted)] p-1"
+                    >
+                      {[1, 2, 3].map((size) => {
+                        const plantSize = size as PlantSize;
+                        const isActive = selectedPlantSize === plantSize;
+
+                        return (
+                          <button
+                            key={plantSize}
+                            type="button"
+                            onClick={() => setSelectedPlantSize(plantSize)}
+                            className={cn(
+                              'inline-flex h-8 items-center justify-center rounded px-2 text-sm font-medium text-[var(--rootly-text-muted)] transition-colors hover:bg-[var(--rootly-surface)] hover:text-[var(--rootly-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--rootly-primary)]',
+                              isActive &&
+                                'bg-[var(--rootly-surface)] text-[var(--rootly-text)] shadow-sm',
+                            )}
+                            aria-pressed={isActive}
+                          >
+                            {plantSize}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                   {selectedPlacedPlant ? (
                     <div className="grid gap-2 border-t border-[var(--rootly-border)] pt-3">
@@ -616,7 +703,8 @@ export function GardenEditor({ garden }: { garden: Garden }) {
                         {getPlacedPlantName(selectedPlacedPlant, plantLibrary)}
                       </p>
                       <p className="text-xs text-[var(--rootly-text-muted)]">
-                        {formatPoint(selectedPlacedPlant)}
+                        {formatPoint(selectedPlacedPlant)}, {selectedPlacedPlant.size} x{' '}
+                        {selectedPlacedPlant.size}
                       </p>
                       <Button
                         type="button"
@@ -673,12 +761,21 @@ export function GardenEditor({ garden }: { garden: Garden }) {
                 <div className="flex items-center justify-between gap-3">
                   <span className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--rootly-text)]">
                     <Sun aria-hidden="true" className="h-4 w-4 text-[var(--rootly-accent)]" />
-                    Sun path
+                    Sun
                   </span>
                   <span className="text-xs font-medium text-[var(--rootly-text-muted)]">
                     {formatSunTime(sunTime)}
                   </span>
                 </div>
+                <label className="flex items-center justify-between gap-3 text-sm font-medium text-[var(--rootly-text)]">
+                  <span>Show sun</span>
+                  <input
+                    type="checkbox"
+                    checked={showSun}
+                    onChange={(event) => setShowSun(event.target.checked)}
+                    className="h-4 w-4 accent-[var(--rootly-accent)]"
+                  />
+                </label>
                 <input
                   type="range"
                   min={6}
@@ -711,19 +808,21 @@ function GardenCanvas({
   sunDirection,
   sunTime,
   shapes,
-  plantLibrary,
   placedPlants,
   draftPoints,
   activeType,
+  showSun,
   selectedPlacedPlantId,
   selectedShapeId,
   selectedPoint,
+  onSunTimeChange,
   onAddPoint,
   onPlacePlant,
   onSelectPlacedPlant,
   onSelectShape,
   onSelectPoint,
   onMovePoint,
+  onMovePlant,
 }: {
   konva: KonvaModule;
   metrics: EditorMetrics;
@@ -732,31 +831,24 @@ function GardenCanvas({
   sunDirection: Garden['sunDirection'];
   sunTime: number;
   shapes: GardenEditorShape[];
-  plantLibrary: PlantLibraryEntry[];
   placedPlants: PlacedPlant[];
   draftPoints: GardenPoint[];
   activeType: EditorShapeType;
+  showSun: boolean;
   selectedPlacedPlantId: string | null;
   selectedShapeId: string | null;
   selectedPoint: SelectedPoint | null;
+  onSunTimeChange: (time: number) => void;
   onAddPoint: (point: GardenPoint) => void;
   onPlacePlant: (point: GardenPoint) => void;
   onSelectPlacedPlant: (plantId: string) => void;
   onSelectShape: (id: string | null) => void;
   onSelectPoint: (shapeId: string, pointIndex: number) => void;
   onMovePoint: (shapeId: string, pointIndex: number, point: GardenPoint) => void;
+  onMovePlant: (plantId: string, point: GardenPoint) => boolean;
 }) {
-  const { Stage, Layer, Rect, Line, Circle, Text } = konva;
+  const { Stage, Layer, Rect, Line, Circle, Text, Group } = konva;
   const sunVisualization = getSunVisualization(metrics, sunDirection, sunTime);
-  const lightSamples = getLightSamples(metrics, shapes, sunVisualization);
-  const selectedPlantRay = selectedPlacedPlantId
-    ? getSelectedPlantRay(
-        placedPlants.find((plant) => plant.id === selectedPlacedPlantId),
-        metrics,
-        shapes,
-        sunVisualization,
-      )
-    : null;
 
   function handleStageClick(event: { target: unknown; currentTarget: unknown }) {
     if (event.target !== event.currentTarget && editorMode !== 'create') {
@@ -811,31 +903,15 @@ function GardenCanvas({
           listening={false}
         />
 
-        <SunPathOverlay
-          konva={konva}
-          visualization={sunVisualization}
-        />
-
-        <LightMapOverlay konva={konva} samples={lightSamples} />
-
-        {shapes
-          .filter((shape) => shape.type === 'blocking_building')
-          .map((shape) => (
-            <Line
-              key={`${shape.id}-sun-shadow`}
-              points={toTranslatedCanvasLinePoints(
-                shape.points,
-                metrics,
-                sunVisualization.shadowOffsetX,
-                sunVisualization.shadowOffsetY,
-              )}
-              closed
-              fill="rgba(80, 87, 82, 0.28)"
-              stroke="rgba(80, 87, 82, 0.32)"
-              strokeWidth={1}
-              listening={false}
-            />
-          ))}
+        {showSun ? (
+          <SunPathOverlay
+            konva={konva}
+            metrics={metrics}
+            sunDirection={sunDirection}
+            visualization={sunVisualization}
+            onSunTimeChange={onSunTimeChange}
+          />
+        ) : null}
 
         {shapes.map((shape) => {
           const option = getShapeOption(shape.type);
@@ -880,53 +956,94 @@ function GardenCanvas({
           );
         })}
 
-        {selectedPlantRay ? (
-          <PlantRayOverlay konva={konva} ray={selectedPlantRay} />
-        ) : null}
-
         {placedPlants.map((plant) => {
-          const plantEntry = getPlantLibraryEntry(plantLibrary, plant.plantLibraryId);
           const canvasPoint = toCanvasPoint(plant, metrics);
-          const spacingRadius = getPlantSpacingRadiusMeters(plantEntry) * metrics.scale;
-          const light = getPlantLight(plant, metrics, shapes, sunVisualization);
+          const footprintSize = getPlantFootprintMeters(plant, metrics) * metrics.scale;
           const isSelected = plant.id === selectedPlacedPlantId;
+          const receivesSun =
+            showSun && !isLightBlocked(
+              toCanvasPoint(getPlantCenterPoint(plant, metrics), metrics),
+              metrics,
+              shapes,
+              sunVisualization,
+            );
 
           return (
-            <Fragment key={plant.id}>
-              <Circle
-                x={canvasPoint.x}
-                y={canvasPoint.y}
-                radius={spacingRadius}
-                fill={light.blocked ? 'rgba(80, 87, 82, 0.14)' : 'rgba(255, 173, 102, 0.12)'}
-                stroke={isSelected ? '#FFAD66' : light.blocked ? '#6B7280' : '#E97828'}
-                strokeWidth={isSelected ? 2 : 1}
-                dash={[6, 5]}
-                listening={false}
+            <Group
+              key={plant.id}
+              x={canvasPoint.x}
+              y={canvasPoint.y}
+              draggable={editorMode !== 'create'}
+              dragBoundFunc={(position: { x: number; y: number }) =>
+                toCanvasPoint(
+                  clampPlantGardenPoint(
+                    toGardenPoint(position, metrics),
+                    metrics,
+                    plant.size,
+                  ),
+                  metrics,
+                )
+              }
+              onMouseDown={(event: { cancelBubble: boolean }) => {
+                event.cancelBubble = true;
+                onSelectPlacedPlant(plant.id);
+              }}
+              onDragStart={(event: { cancelBubble: boolean }) => {
+                event.cancelBubble = true;
+                onSelectPlacedPlant(plant.id);
+              }}
+              onDragEnd={(event: {
+                target: {
+                  x: (value?: number) => number;
+                  y: (value?: number) => number;
+                };
+              }) => {
+                const nextPoint = clampPlantGardenPoint(
+                  toGardenPoint({ x: event.target.x(), y: event.target.y() }, metrics),
+                  metrics,
+                  plant.size,
+                );
+                const didMove = onMovePlant(plant.id, nextPoint);
+
+                if (!didMove) {
+                  event.target.x(canvasPoint.x);
+                  event.target.y(canvasPoint.y);
+                }
+              }}
+            >
+              <Rect
+                x={0}
+                y={0}
+                width={footprintSize}
+                height={footprintSize}
+                fill={receivesSun ? 'rgba(255, 173, 102, 0.28)' : 'rgba(143, 220, 102, 0.24)'}
+                stroke={isSelected ? '#FFAD66' : receivesSun ? '#E97828' : '#26783A'}
+                strokeWidth={isSelected ? 3 : 2}
+                cornerRadius={3}
+                shadowColor={receivesSun ? '#FFAD66' : undefined}
+                shadowBlur={receivesSun ? 10 : 0}
+                shadowOpacity={receivesSun ? 0.28 : 0}
               />
               <Circle
-                x={canvasPoint.x}
-                y={canvasPoint.y}
+                x={footprintSize / 2}
+                y={footprintSize / 2}
                 radius={isSelected ? 8 : 6}
-                fill={light.blocked ? '#6B7280' : '#8FDC66'}
+                fill={receivesSun ? '#FFAD66' : '#8FDC66'}
                 stroke={isSelected ? '#F7F8F4' : '#182019'}
                 strokeWidth={2}
-                onMouseDown={(event: { cancelBubble: boolean }) => {
-                  event.cancelBubble = true;
-                  onSelectPlacedPlant(plant.id);
-                }}
               />
               {isSelected ? (
                 <Text
-                  x={canvasPoint.x + 12}
-                  y={canvasPoint.y - 9}
-                  text={light.blocked ? 'shade' : 'light'}
+                  x={footprintSize + 8}
+                  y={Math.max(0, footprintSize / 2 - 9)}
+                  text={`${plant.size}x${plant.size}`}
                   fontSize={12}
                   fontStyle="bold"
-                  fill={light.blocked ? '#6B7280' : '#FFAD66'}
+                  fill="#FFAD66"
                   listening={false}
                 />
               ) : null}
-            </Fragment>
+            </Group>
           );
         })}
 
@@ -1080,10 +1197,16 @@ function GardenGrid({
 
 function SunPathOverlay({
   konva,
+  metrics,
+  sunDirection,
   visualization,
+  onSunTimeChange,
 }: {
   konva: KonvaModule;
+  metrics: EditorMetrics;
+  sunDirection: Garden['sunDirection'];
   visualization: SunVisualization;
+  onSunTimeChange: (time: number) => void;
 }) {
   const { Circle, Line, Text } = konva;
 
@@ -1107,7 +1230,38 @@ function SunPathOverlay({
         shadowColor="#FFAD66"
         shadowBlur={18}
         shadowOpacity={0.55}
-        listening={false}
+        draggable
+        onMouseDown={(event: { cancelBubble: boolean }) => {
+          event.cancelBubble = true;
+        }}
+        onDragStart={(event: { cancelBubble: boolean }) => {
+          event.cancelBubble = true;
+        }}
+        dragBoundFunc={(position: { x: number; y: number }) => {
+          const nextTime = getSunTimeFromCanvasPoint(metrics, sunDirection, position);
+          const nextVisualization = getSunVisualization(metrics, sunDirection, nextTime);
+
+          return {
+            x: nextVisualization.sunX,
+            y: nextVisualization.sunY,
+          };
+        }}
+        onDragMove={(event: { target: { x: () => number; y: () => number } }) => {
+          onSunTimeChange(
+            getSunTimeFromCanvasPoint(metrics, sunDirection, {
+              x: event.target.x(),
+              y: event.target.y(),
+            }),
+          );
+        }}
+        onDragEnd={(event: { target: { x: () => number; y: () => number } }) => {
+          onSunTimeChange(
+            getSunTimeFromCanvasPoint(metrics, sunDirection, {
+              x: event.target.x(),
+              y: event.target.y(),
+            }),
+          );
+        }}
       />
       <Line
         points={[
@@ -1135,67 +1289,6 @@ function SunPathOverlay({
   );
 }
 
-function LightMapOverlay({
-  konva,
-  samples,
-}: {
-  konva: KonvaModule;
-  samples: LightSample[];
-}) {
-  const { Circle } = konva;
-
-  return (
-    <>
-      {samples.map((sample, index) => (
-        <Circle
-          key={`${sample.x}-${sample.y}-${index}`}
-          x={sample.x}
-          y={sample.y}
-          radius={2.5}
-          fill={sample.blocked ? 'rgba(107, 114, 128, 0.48)' : 'rgba(255, 173, 102, 0.68)'}
-          listening={false}
-        />
-      ))}
-    </>
-  );
-}
-
-function PlantRayOverlay({ konva, ray }: { konva: KonvaModule; ray: PlantRay }) {
-  const { Line } = konva;
-
-  if (!ray.blockPoint) {
-    return (
-      <Line
-        points={[ray.sun.x, ray.sun.y, ray.plant.x, ray.plant.y]}
-        stroke="#FFAD66"
-        strokeWidth={2}
-        opacity={0.72}
-        listening={false}
-      />
-    );
-  }
-
-  return (
-    <>
-      <Line
-        points={[ray.sun.x, ray.sun.y, ray.blockPoint.x, ray.blockPoint.y]}
-        stroke="#FFAD66"
-        strokeWidth={2}
-        opacity={0.72}
-        listening={false}
-      />
-      <Line
-        points={[ray.blockPoint.x, ray.blockPoint.y, ray.plant.x, ray.plant.y]}
-        stroke="#6B7280"
-        strokeWidth={2}
-        opacity={0.64}
-        dash={[7, 7]}
-        listening={false}
-      />
-    </>
-  );
-}
-
 type EditorMetrics = {
   canvasWidth: number;
   canvasHeight: number;
@@ -1215,21 +1308,7 @@ type SunVisualization = {
   sunY: number;
   gardenCenterX: number;
   gardenCenterY: number;
-  shadowOffsetX: number;
-  shadowOffsetY: number;
   timeLabel: string;
-};
-
-type LightSample = {
-  x: number;
-  y: number;
-  blocked: boolean;
-};
-
-type PlantRay = {
-  sun: { x: number; y: number };
-  plant: { x: number; y: number };
-  blockPoint: { x: number; y: number } | null;
 };
 
 function createEditorMetrics(garden: Garden, canvasSize: CanvasSize): EditorMetrics {
@@ -1293,18 +1372,6 @@ function toCanvasLinePoints(points: GardenPoint[], metrics: EditorMetrics) {
   return points.flatMap((point) => {
     const canvasPoint = toCanvasPoint(point, metrics);
     return [canvasPoint.x, canvasPoint.y];
-  });
-}
-
-function toTranslatedCanvasLinePoints(
-  points: GardenPoint[],
-  metrics: EditorMetrics,
-  offsetX: number,
-  offsetY: number,
-) {
-  return points.flatMap((point) => {
-    const canvasPoint = toCanvasPoint(point, metrics);
-    return [canvasPoint.x + offsetX, canvasPoint.y + offsetY];
   });
 }
 
@@ -1379,105 +1446,102 @@ function getPlantLibraryEntry(plantLibrary: PlantLibraryEntry[], plantLibraryId:
   return plantLibrary.find((plant) => plant.plantLibraryId === plantLibraryId) ?? null;
 }
 
-function getPlantSpacingRadiusMeters(plant: PlantLibraryEntry | null) {
-  return Math.max((plant?.spacingCm ?? 30) / 100 / 2, 0.15);
+function getPlantFootprintMeters(plant: Pick<PlacedPlant, 'size'>, metrics: EditorMetrics) {
+  return plant.size * metrics.gridStepMeters;
 }
 
-function doesPlantSpacingOverlap(
+function clampPlantGardenPoint(
   point: GardenPoint,
-  plant: PlantLibraryEntry,
-  placedPlants: PlacedPlant[],
-  plantLibrary: PlantLibraryEntry[],
+  metrics: EditorMetrics,
+  plantSize: PlantSize,
+): GardenPoint {
+  const footprintMeters = plantSize * metrics.gridStepMeters;
+
+  return {
+    x: Math.max(0, Math.min(metrics.widthMeters - footprintMeters, Math.max(0, point.x))),
+    y: Math.max(0, Math.min(metrics.heightMeters - footprintMeters, Math.max(0, point.y))),
+  };
+}
+
+function isPlantPlacementInsideGarden(plant: PlacedPlant, metrics: EditorMetrics) {
+  const footprintMeters = getPlantFootprintMeters(plant, metrics);
+
+  return (
+    plant.x >= 0 &&
+    plant.y >= 0 &&
+    plant.x + footprintMeters <= metrics.widthMeters + 0.0001 &&
+    plant.y + footprintMeters <= metrics.heightMeters + 0.0001
+  );
+}
+
+function isPlantFootprintInsidePlantArea(
+  plant: PlacedPlant,
+  shapes: GardenEditorShape[],
+  metrics: EditorMetrics,
 ) {
-  const radius = getPlantSpacingRadiusMeters(plant);
+  const samplePoints = getPlantFootprintSamplePoints(plant, metrics);
+  const plantAreas = shapes.filter((shape) => shape.type === 'plant_area');
 
+  return plantAreas.some((plantArea) =>
+    samplePoints.every((point) => isPointInPolygon(point, plantArea.points)),
+  );
+}
+
+function getPlantFootprintSamplePoints(plant: PlacedPlant, metrics: EditorMetrics) {
+  return Array.from({ length: plant.size }).flatMap((_, columnIndex) =>
+    Array.from({ length: plant.size }).map((__, rowIndex) => ({
+      x: plant.x + columnIndex * metrics.gridStepMeters + metrics.gridStepMeters / 2,
+      y: plant.y + rowIndex * metrics.gridStepMeters + metrics.gridStepMeters / 2,
+    })),
+  );
+}
+
+function doesPlantFootprintOverlap(
+  plant: PlacedPlant,
+  placedPlants: PlacedPlant[],
+  metrics: EditorMetrics,
+  ignoredPlantId?: string,
+) {
   return placedPlants.some((placedPlant) => {
-    const placedPlantEntry = getPlantLibraryEntry(plantLibrary, placedPlant.plantLibraryId);
-    const placedRadius = getPlantSpacingRadiusMeters(placedPlantEntry);
-    const distance = Math.hypot(point.x - placedPlant.x, point.y - placedPlant.y);
+    if (placedPlant.id === ignoredPlantId) {
+      return false;
+    }
 
-    return distance < radius + placedRadius;
+    return doPlantFootprintsOverlap(plant, placedPlant, metrics);
   });
 }
 
-function isPointInsidePlantArea(point: GardenPoint, shapes: GardenEditorShape[]) {
-  return shapes.some(
-    (shape) => shape.type === 'plant_area' && isPointInPolygon(point, shape.points),
+function doPlantFootprintsOverlap(
+  plant: PlacedPlant,
+  otherPlant: PlacedPlant,
+  metrics: EditorMetrics,
+) {
+  const plantSizeMeters = getPlantFootprintMeters(plant, metrics);
+  const otherPlantSizeMeters = getPlantFootprintMeters(otherPlant, metrics);
+
+  return (
+    plant.x < otherPlant.x + otherPlantSizeMeters - 0.0001 &&
+    plant.x + plantSizeMeters > otherPlant.x + 0.0001 &&
+    plant.y < otherPlant.y + otherPlantSizeMeters - 0.0001 &&
+    plant.y + plantSizeMeters > otherPlant.y + 0.0001
   );
+}
+
+function getPlantCenterPoint(plant: PlacedPlant, metrics: EditorMetrics): GardenPoint {
+  const halfFootprintMeters = getPlantFootprintMeters(plant, metrics) / 2;
+
+  return {
+    x: plant.x + halfFootprintMeters,
+    y: plant.y + halfFootprintMeters,
+  };
 }
 
 function getPlacedPlantName(plant: PlacedPlant, plantLibrary: PlantLibraryEntry[]) {
   return getPlantLibraryEntry(plantLibrary, plant.plantLibraryId)?.commonName ?? 'Plant';
 }
 
-function formatSpacing(plant: PlantLibraryEntry) {
-  return plant.spacingCm ? `${plant.spacingCm} cm` : '30 cm';
-}
-
 function formatPoint(point: GardenPoint) {
   return `${formatSize(point.x)} m x ${formatSize(point.y)} m`;
-}
-
-function getLightSamples(
-  metrics: EditorMetrics,
-  shapes: GardenEditorShape[],
-  sunVisualization: SunVisualization,
-): LightSample[] {
-  const plantAreas = shapes.filter((shape) => shape.type === 'plant_area');
-  const sampleStepMeters = Math.max(metrics.gridStepMeters * 4, 0.75);
-  const samples: LightSample[] = [];
-
-  for (const plantArea of plantAreas) {
-    const bounds = getPolygonBounds(plantArea.points);
-
-    for (let x = bounds.minX; x <= bounds.maxX; x += sampleStepMeters) {
-      for (let y = bounds.minY; y <= bounds.maxY; y += sampleStepMeters) {
-        const point = { x, y };
-
-        if (!isPointInPolygon(point, plantArea.points)) {
-          continue;
-        }
-
-        const canvasPoint = toCanvasPoint(point, metrics);
-        samples.push({
-          ...canvasPoint,
-          blocked: isLightBlocked(canvasPoint, metrics, shapes, sunVisualization),
-        });
-      }
-    }
-  }
-
-  return samples;
-}
-
-function getPlantLight(
-  plant: PlacedPlant,
-  metrics: EditorMetrics,
-  shapes: GardenEditorShape[],
-  sunVisualization: SunVisualization,
-) {
-  return {
-    blocked: isLightBlocked(toCanvasPoint(plant, metrics), metrics, shapes, sunVisualization),
-  };
-}
-
-function getSelectedPlantRay(
-  plant: PlacedPlant | undefined,
-  metrics: EditorMetrics,
-  shapes: GardenEditorShape[],
-  sunVisualization: SunVisualization,
-): PlantRay | null {
-  if (!plant) {
-    return null;
-  }
-
-  const canvasPlant = toCanvasPoint(plant, metrics);
-
-  return {
-    sun: { x: sunVisualization.sunX, y: sunVisualization.sunY },
-    plant: canvasPlant,
-    blockPoint: getFirstLightBlockPoint(canvasPlant, metrics, shapes, sunVisualization),
-  };
 }
 
 function isLightBlocked(
@@ -1634,10 +1698,6 @@ function getSunVisualization(
 
   const sunX = gardenCenterX + Math.cos(angle) * radiusX;
   const sunY = gardenCenterY + Math.sin(angle) * radiusY;
-  const shadowVectorX = gardenCenterX - sunX;
-  const shadowVectorY = gardenCenterY - sunY;
-  const shadowVectorLength = Math.hypot(shadowVectorX, shadowVectorY) || 1;
-  const shadowLength = Math.min(76, Math.max(28, metrics.scale * 1.4));
 
   return {
     pathPoints,
@@ -1645,10 +1705,58 @@ function getSunVisualization(
     sunY,
     gardenCenterX,
     gardenCenterY,
-    shadowOffsetX: (shadowVectorX / shadowVectorLength) * shadowLength,
-    shadowOffsetY: (shadowVectorY / shadowVectorLength) * shadowLength,
     timeLabel: formatSunTime(sunTime),
   };
+}
+
+function getSunTimeFromCanvasPoint(
+  metrics: EditorMetrics,
+  sunDirection: Garden['sunDirection'],
+  point: { x: number; y: number },
+) {
+  const gardenCenterX = metrics.originX + metrics.gardenWidthPx / 2;
+  const gardenCenterY = metrics.originY + metrics.gardenHeightPx / 2;
+  const noonAngle = getDirectionAngle(sunDirection);
+  const sweep = (140 * Math.PI) / 180;
+  const startAngle = noonAngle - sweep / 2;
+  const radiusX = Math.max(
+    32,
+    Math.min(
+      metrics.gardenWidthPx / 2 + 42,
+      gardenCenterX - 18,
+      metrics.canvasWidth - gardenCenterX - 18,
+    ),
+  );
+  const radiusY = Math.max(
+    32,
+    Math.min(
+      metrics.gardenHeightPx / 2 + 42,
+      gardenCenterY - 18,
+      metrics.canvasHeight - gardenCenterY - 18,
+    ),
+  );
+  const rawAngle = Math.atan2(
+    (point.y - gardenCenterY) / radiusY,
+    (point.x - gardenCenterX) / radiusX,
+  );
+  const angle = normalizeAngleAfterStart(rawAngle, startAngle);
+  const progress = clamp((angle - startAngle) / sweep, 0, 1);
+
+  return Math.round((6 + progress * 12) * 2) / 2;
+}
+
+function normalizeAngleAfterStart(angle: number, startAngle: number) {
+  let normalizedAngle = angle;
+
+  while (normalizedAngle < startAngle) {
+    normalizedAngle += Math.PI * 2;
+  }
+
+  while (normalizedAngle > startAngle + Math.PI * 2) {
+    normalizedAngle -= Math.PI * 2;
+  }
+
+  return normalizedAngle;
 }
 
 function getDirectionAngle(direction: Garden['sunDirection']) {

@@ -66,7 +66,7 @@ export function ThemeProvider({
   children: ReactNode;
   initialMode?: RootlyThemeMode | null;
 }) {
-  const [mode, setThemeMode] = useState<RootlyThemeMode>('light');
+  const [mode, setThemeMode] = useState<RootlyThemeMode>(initialMode ?? 'light');
 
   useEffect(() => {
     const preferredMode = getPreferredTheme(initialMode);

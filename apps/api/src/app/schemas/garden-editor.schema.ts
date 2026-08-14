@@ -23,6 +23,7 @@ export const replaceGardenEditorShapesSchema = z.object({
 
 export const gardenEditorPlantSchema = z.object({
   plantLibraryId: z.number().int().positive('Plant library ID must be a positive integer'),
+  size: z.number().int().min(1).max(3).default(1),
   x: z.number().finite().nonnegative(),
   y: z.number().finite().nonnegative(),
 });

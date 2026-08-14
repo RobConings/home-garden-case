@@ -7,6 +7,7 @@ import { migration005 } from './migrations/migration005';
 import { migration006 } from './migrations/migration006';
 import { migration007 } from './migrations/migration007';
 import { migration008 } from './migrations/migration008';
+import { migration009 } from './migrations/migration009';
 import { Database } from './types';
 
 export class MigratorService {
@@ -21,14 +22,15 @@ export class MigratorService {
       db: this.db,
       provider: {
         getMigrations: async () => ({
-      migration001,
-      migration002,
-      migration003,
-      migration004,
-      migration005,
-      migration006,
-      migration007,
-      migration008,
+          migration001,
+          migration002,
+          migration003,
+          migration004,
+          migration005,
+          migration006,
+          migration007,
+          migration008,
+          migration009,
         }),
       },
     });

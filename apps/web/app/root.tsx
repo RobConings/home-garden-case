@@ -13,9 +13,14 @@ import {
 import { AppProviders } from '@/providers';
 import { Button } from '@/components/ui/button';
 import { getCurrentUser } from '@/lib/session.server';
+import { getThemeClass, type RootlyThemeMode } from '@/lib/theme';
 import stylesheet from './styles/global.css?url';
 
-function createThemeInitScript(themePreference?: 'light' | 'dark' | null) {
+function isThemeMode(value: unknown): value is RootlyThemeMode {
+  return value === 'light' || value === 'dark';
+}
+
+function createThemeInitScript(themePreference?: RootlyThemeMode | null) {
   return `
   (() => {
     try {
@@ -70,10 +75,16 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const { user } = useLoaderData<typeof loader>();
-  const themeInitScript = createThemeInitScript(user?.themePreference);
+  const themePreference = isThemeMode(user?.themePreference) ? user.themePreference : null;
+  const themeInitScript = createThemeInitScript(themePreference);
 
   return (
-    <html lang="en">
+    <html
+      lang="en"
+      className={themePreference ? getThemeClass(themePreference) : undefined}
+      data-theme={themePreference ?? undefined}
+      suppressHydrationWarning
+    >
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
