@@ -1,6 +1,7 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from '@remix-run/node';
 import { json, redirect } from '@remix-run/node';
 import { Form, Link, useActionData, useLoaderData, useNavigation } from '@remix-run/react';
+import { useEffect } from 'react';
 import { PageContainer, PageStack } from '@/components/layout';
 import { PageTitle } from '@/components/shared';
 import { Button } from '@/components/ui/button';
@@ -12,6 +13,7 @@ import {
 import { PlantLibraryForm } from '@/features/plants/components';
 import { ApiClientError } from '@/lib/api.server';
 import { requireUser } from '@/lib/session.server';
+import { useMessages } from '@/providers/message-provider';
 
 type ActionData = {
   message?: string;
@@ -78,7 +80,14 @@ export default function DashboardPlantsEdit() {
   const { plant } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
+  const { showError } = useMessages();
   const isSubmitting = navigation.state === 'submitting';
+
+  useEffect(() => {
+    if (actionData?.message) {
+      showError(actionData.message);
+    }
+  }, [actionData?.message, showError]);
 
   return (
     <PageContainer minHeight="content" className="py-8">
@@ -94,15 +103,6 @@ export default function DashboardPlantsEdit() {
           }
         />
 
-        {actionData?.message ? (
-          <div
-            role="alert"
-            className="rounded-md border border-[var(--rootly-danger)]/30 bg-[var(--rootly-surface)] px-4 py-3 text-sm text-[var(--rootly-text)]"
-          >
-            {actionData.message}
-          </div>
-        ) : null}
-
         <PlantLibraryForm as={Form} plant={plant} isSubmitting={isSubmitting} />
       </PageStack>
     </PageContainer>
@@ -111,7 +111,7 @@ export default function DashboardPlantsEdit() {
 
 function readPlantPayload(formData: FormData) {
   return {
-    commonName: String(formData.get('commonName') || ''),
+    commonName: sanitizeText(formData.get('commonName')),
     botanicalName: optionalString(formData.get('botanicalName')),
     plantCategory: String(
       formData.get('plantCategory') || 'vegetable',
@@ -131,11 +131,20 @@ function readPlantPayload(formData: FormData) {
 }
 
 function optionalString(value: FormDataEntryValue | null) {
-  const text = String(value || '').trim();
+  const text = sanitizeText(value);
   return text ? text : null;
 }
 
 function optionalNumber(value: FormDataEntryValue | null) {
   const text = String(value || '').trim();
-  return text ? Number(text) : null;
+  if (!text) {
+    return null;
+  }
+
+  const number = Number(text);
+  return Number.isFinite(number) ? number : null;
+}
+
+function sanitizeText(value: FormDataEntryValue | null) {
+  return String(value || '').trim();
 }

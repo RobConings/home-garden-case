@@ -18,6 +18,7 @@ export function GardenForm({
   as: FormComponent = 'form',
 }: GardenFormProps) {
   const isEditing = Boolean(garden);
+  const lockedDescription = 'Set on creation for the editor grid. This cannot be adjusted later.';
 
   return (
     <GeneralForm
@@ -47,7 +48,7 @@ export function GardenForm({
       </PageGrid>
 
       <PageGrid columns={3} gap="sm">
-        <Field id="totalWidth" label="Total width (m)">
+        <Field id="totalWidth" label="Total width (m)" description={lockedDescription}>
           <Input
             id="totalWidth"
             name="totalWidth"
@@ -55,10 +56,11 @@ export function GardenForm({
             min="0.1"
             step="0.1"
             defaultValue={garden?.totalWidth ?? ''}
+            readOnly={isEditing}
             required
           />
         </Field>
-        <Field id="totalHeight" label="Total height (m)">
+        <Field id="totalHeight" label="Total height (m)" description={lockedDescription}>
           <Input
             id="totalHeight"
             name="totalHeight"
@@ -66,6 +68,7 @@ export function GardenForm({
             min="0.1"
             step="0.1"
             defaultValue={garden?.totalHeight ?? ''}
+            readOnly={isEditing}
             required
           />
         </Field>
@@ -83,6 +86,23 @@ export function GardenForm({
           </Select>
         </Field>
       </PageGrid>
+
+      <Field
+        id="gridSizeCm"
+        label="Grid size (cm)"
+        description="Set on creation for editor spacing. This cannot be adjusted later."
+      >
+        <Input
+          id="gridSizeCm"
+          name="gridSizeCm"
+          type="number"
+          min="5"
+          step="5"
+          defaultValue={garden?.gridSizeCm ?? 25}
+          readOnly={isEditing}
+          required
+        />
+      </Field>
     </GeneralForm>
   );
 }

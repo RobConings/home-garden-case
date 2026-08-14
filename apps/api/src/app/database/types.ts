@@ -3,6 +3,8 @@ import { ColumnType, Generated, Insertable, Selectable, Updateable } from 'kysel
 export interface Database {
   user: UserTable;
   garden: GardenTable;
+  gardenEditorShape: GardenEditorShapeTable;
+  gardenEditorShapePoint: GardenEditorShapePointTable;
   plant: PlantTable;
   plantLibrary: PlantLibraryTable;
 }
@@ -28,6 +30,7 @@ export interface GardenTable {
   totalSurfaceArea: number; // in square meters
   totalWidth: number; // in meters
   totalHeight: number; // in meters
+  gridSizeCm: number;
   locationDescription: string | null; // e.g., "Backyard", "Patio"
   sunDirection: 'north' | 'east' | 'south' | 'west';
   latitude: number | null; // optional geographic coordinate
@@ -39,6 +42,31 @@ export interface GardenTable {
 export type Garden = Selectable<GardenTable>;
 export type NewGarden = Insertable<GardenTable>;
 export type GardenUpdate = Updateable<GardenTable>;
+
+export interface GardenEditorShapeTable {
+  gardenEditorShapeId: Generated<number>;
+  gardenId: number;
+  shapeType: 'blocking_building' | 'pathway' | 'grass' | 'plant_area';
+  sortOrder: number;
+  createdAt: ColumnType<Date, string | undefined, never>;
+  updatedAt: ColumnType<Date, string | undefined, never>;
+}
+
+export type GardenEditorShape = Selectable<GardenEditorShapeTable>;
+export type NewGardenEditorShape = Insertable<GardenEditorShapeTable>;
+
+export interface GardenEditorShapePointTable {
+  gardenEditorShapePointId: Generated<number>;
+  gardenEditorShapeId: number;
+  pointIndex: number;
+  x: number;
+  y: number;
+  createdAt: ColumnType<Date, string | undefined, never>;
+  updatedAt: ColumnType<Date, string | undefined, never>;
+}
+
+export type GardenEditorShapePoint = Selectable<GardenEditorShapePointTable>;
+export type NewGardenEditorShapePoint = Insertable<GardenEditorShapePointTable>;
 
 export interface PlantTable {
   plantId: Generated<number>;

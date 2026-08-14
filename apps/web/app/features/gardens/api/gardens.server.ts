@@ -8,6 +8,7 @@ export type Garden = {
   totalSurfaceArea: number;
   totalWidth: number;
   totalHeight: number;
+  gridSizeCm: number;
   locationDescription: string | null;
   sunDirection: SunDirection;
   latitude: number | null;
@@ -21,6 +22,7 @@ export type CreateGardenPayload = {
   locationDescription?: string | null;
   totalWidth: number;
   totalHeight: number;
+  gridSizeCm: number;
   sunDirection: SunDirection;
 };
 

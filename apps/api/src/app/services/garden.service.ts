@@ -62,7 +62,10 @@ export class GardenService {
     const validatedData = updateGardenSchema.parse(data);
     const gardenData: GardenUpdate = {
       ...validatedData,
-      totalSurfaceArea: calculateSurfaceArea(validatedData.totalWidth, validatedData.totalHeight),
+      totalWidth: existingGarden.totalWidth,
+      totalHeight: existingGarden.totalHeight,
+      gridSizeCm: existingGarden.gridSizeCm,
+      totalSurfaceArea: existingGarden.totalSurfaceArea,
     };
 
     return await this.gardenRepository.update(gardenId, gardenData);

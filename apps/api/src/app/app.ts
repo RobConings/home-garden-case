@@ -7,10 +7,12 @@ import * as path from 'path';
 import { DatabaseConnection } from './database/connection';
 import { MigratorService } from './database/migrator';
 import { GardenRepository } from './database/repositories/garden.repository';
+import { GardenEditorRepository } from './database/repositories/garden-editor.repository';
 import { PlantLibraryRepository } from './database/repositories/plant-library.repository';
 import { PlantRepository } from './database/repositories/plant.repository';
 import { UserRepository } from './database/repositories/user.repository';
 import { GardenService } from './services/garden.service';
+import { GardenEditorService } from './services/garden-editor.service';
 import { PlantLibraryService } from './services/plant-library.service';
 import { PlantService } from './services/plant.service';
 import { UserService } from './services/user.service';
@@ -25,10 +27,12 @@ export async function app(fastify: FastifyInstance, opts: AppOptions) {
     migratorService: asClass(MigratorService).singleton(),
     userRepository: asClass(UserRepository).singleton(),
     gardenRepository: asClass(GardenRepository).singleton(),
+    gardenEditorRepository: asClass(GardenEditorRepository).singleton(),
     plantLibraryRepository: asClass(PlantLibraryRepository).singleton(),
     plantRepository: asClass(PlantRepository).singleton(),
     userService: asClass(UserService).singleton(),
     gardenService: asClass(GardenService).singleton(),
+    gardenEditorService: asClass(GardenEditorService).singleton(),
     plantLibraryService: asClass(PlantLibraryService).singleton(),
     plantService: asClass(PlantService).singleton(),
   });

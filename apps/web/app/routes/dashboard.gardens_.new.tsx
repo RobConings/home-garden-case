@@ -1,6 +1,7 @@
 import type { ActionFunctionArgs, MetaFunction } from '@remix-run/node';
 import { json, redirect } from '@remix-run/node';
 import { Form, Link, useActionData, useNavigation } from '@remix-run/react';
+import { useEffect } from 'react';
 import { PageContainer, PageStack } from '@/components/layout';
 import { PageTitle } from '@/components/shared';
 import { Button } from '@/components/ui/button';
@@ -8,6 +9,7 @@ import { createGarden, type Garden } from '@/features/gardens/api';
 import { GardenForm } from '@/features/gardens/components';
 import { ApiClientError } from '@/lib/api.server';
 import { requireUser } from '@/lib/session.server';
+import { useMessages } from '@/providers/message-provider';
 
 type ActionData = {
   message?: string;
@@ -30,10 +32,14 @@ export async function action({ request }: ActionFunctionArgs) {
 
     return redirect('/dashboard/gardens?toast=garden-created');
   } catch (error) {
-    const status = error instanceof ApiClientError ? error.status : 503;
+    const status =
+      error instanceof ApiClientError ? error.status : error instanceof ValidationError ? 400 : 503;
     return json<ActionData>(
       {
-        message: 'We could not save this garden right now. Please check the details and try again.',
+        message:
+          error instanceof ValidationError
+            ? error.message
+            : 'We could not save this garden right now. Please check the details and try again.',
       },
       { status },
     );
@@ -43,7 +49,14 @@ export async function action({ request }: ActionFunctionArgs) {
 export default function DashboardGardensNew() {
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
+  const { showError } = useMessages();
   const isSubmitting = navigation.state === 'submitting';
+
+  useEffect(() => {
+    if (actionData?.message) {
+      showError(actionData.message);
+    }
+  }, [actionData?.message, showError]);
 
   return (
     <PageContainer minHeight="content" className="py-8">
@@ -59,15 +72,6 @@ export default function DashboardGardensNew() {
           }
         />
 
-        {actionData?.message ? (
-          <div
-            role="alert"
-            className="rounded-md border border-[var(--rootly-danger)]/30 bg-[var(--rootly-surface)] px-4 py-3 text-sm text-[var(--rootly-text)]"
-          >
-            {actionData.message}
-          </div>
-        ) : null}
-
         <GardenForm as={Form} isSubmitting={isSubmitting} />
       </PageStack>
     </PageContainer>
@@ -75,15 +79,47 @@ export default function DashboardGardensNew() {
 }
 
 function readGardenPayload(formData: FormData) {
+  const gardenName = sanitizeText(formData.get('gardenName'));
+  const totalWidth = requiredPositiveNumber(formData.get('totalWidth'));
+  const totalHeight = requiredPositiveNumber(formData.get('totalHeight'));
+  const gridSizeCm = requiredPositiveInteger(formData.get('gridSizeCm'));
+
+  if (!gardenName) {
+    throw new ValidationError('Garden name is required.');
+  }
+
   return {
-    gardenName: String(formData.get('gardenName') || '').trim(),
+    gardenName,
     locationDescription: null,
-    totalWidth: requiredNumber(formData.get('totalWidth')),
-    totalHeight: requiredNumber(formData.get('totalHeight')),
+    totalWidth,
+    totalHeight,
+    gridSizeCm,
     sunDirection: String(formData.get('sunDirection') || 'south') as Garden['sunDirection'],
   };
 }
 
-function requiredNumber(value: FormDataEntryValue | null) {
-  return Number(String(value || '').trim());
+function requiredPositiveNumber(value: FormDataEntryValue | null) {
+  const number = Number(String(value || '').trim());
+
+  if (!Number.isFinite(number) || number <= 0) {
+    throw new ValidationError('Garden width and height are required.');
+  }
+
+  return number;
+}
+
+function sanitizeText(value: FormDataEntryValue | null) {
+  return String(value || '').trim();
+}
+
+class ValidationError extends Error {}
+
+function requiredPositiveInteger(value: FormDataEntryValue | null) {
+  const number = Number(String(value || '').trim());
+
+  if (!Number.isInteger(number) || number <= 0) {
+    throw new ValidationError('Grid size is required.');
+  }
+
+  return number;
 }

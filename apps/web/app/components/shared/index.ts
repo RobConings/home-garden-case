@@ -7,5 +7,6 @@ export * from './general-list';
 export * from './feature-card';
 export * from './notification-callout';
 export * from './page-title';
+export * from './panel';
 export * from './stat-card';
 export * from './theme-toggle';

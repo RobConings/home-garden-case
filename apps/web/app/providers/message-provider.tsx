@@ -1,122 +1,90 @@
-import {
-  createContext,
-  type ReactNode,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
-import { AlertTriangle, CheckCircle2, type LucideIcon, X, XCircle } from 'lucide-react';
+import type { ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { AlertTriangle, CheckCircle2, X, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 
-type MessageVariant = 'success' | 'error' | 'warning';
+type MessageType = 'success' | 'error' | 'warning';
 
-type ToastMessage = {
+type Message = {
   id: number;
-  variant: MessageVariant;
-  title: string;
-  description?: string;
-};
-
-type AddMessageInput = {
-  title: string;
-  description?: string;
+  type: MessageType;
+  text: string;
 };
 
 type MessageContextValue = {
-  success: (message: AddMessageInput | string) => void;
-  error: (message: AddMessageInput | string) => void;
-  warning: (message: AddMessageInput | string) => void;
-  dismiss: (id: number) => void;
+  showMessage: (type: MessageType, text: string) => void;
+  showSuccess: (text: string) => void;
+  showError: (text: string) => void;
+  showWarning: (text: string) => void;
+  dismissMessage: (id: number) => void;
+  clearMessages: () => void;
 };
 
-const toastDuration = 5000;
+type MessageProviderProps = {
+  children: ReactNode;
+};
+
 const MessageContext = createContext<MessageContextValue | null>(null);
-const toastVariantStyles = {
+
+const messageStyles = {
   success: {
-    Icon: CheckCircle2,
-    iconClassName: 'text-[var(--rootly-primary)]',
-    className:
-      'border-[var(--rootly-primary)]/40 bg-[var(--rootly-primary-soft)] text-[var(--rootly-text)]',
+    className: 'border-[var(--rootly-success)] text-[var(--rootly-success)]',
+    icon: CheckCircle2,
   },
   error: {
-    Icon: XCircle,
-    iconClassName: 'text-[var(--rootly-danger)]',
-    className:
-      'border-[var(--rootly-danger)]/40 bg-[var(--rootly-danger-soft)] text-[var(--rootly-text)]',
+    className: 'border-[var(--rootly-danger)] text-[var(--rootly-danger)]',
+    icon: XCircle,
   },
   warning: {
-    Icon: AlertTriangle,
-    iconClassName: 'text-[var(--rootly-warning)]',
-    className:
-      'border-[var(--rootly-warning)]/40 bg-[var(--rootly-warning-soft)] text-[var(--rootly-text)]',
+    className: 'border-[var(--rootly-accent)] text-[var(--rootly-accent)]',
+    icon: AlertTriangle,
   },
-} satisfies Record<
-  MessageVariant,
-  {
-    Icon: LucideIcon;
-    iconClassName: string;
-    className: string;
-  }
->;
+};
 
-export function MessageProvider({ children }: { children: ReactNode }) {
-  const [messages, setMessages] = useState<ToastMessage[]>([]);
-  const nextIdRef = useRef(1);
-  const timersRef = useRef<Map<number, ReturnType<typeof window.setTimeout>>>(new Map());
+export function MessageProvider({ children }: MessageProviderProps) {
+  const [messages, setMessages] = useState<Message[]>([]);
 
-  const dismiss = useCallback((id: number) => {
+  const dismissMessage = useCallback((id: number) => {
     setMessages((currentMessages) => currentMessages.filter((message) => message.id !== id));
-
-    const timer = timersRef.current.get(id);
-    if (timer) {
-      window.clearTimeout(timer);
-      timersRef.current.delete(id);
-    }
   }, []);
 
-  const addMessage = useCallback(
-    (variant: MessageVariant, input: AddMessageInput | string) => {
-      const message = normalizeMessage(input);
-      const id = nextIdRef.current;
-      nextIdRef.current += 1;
+  const showMessage = useCallback(
+    (type: MessageType, text: string) => {
+      const cleanText = text.trim();
 
-      setMessages((currentMessages) => [...currentMessages, { id, variant, ...message }]);
+      if (!cleanText) {
+        return;
+      }
 
-      const timer = window.setTimeout(() => {
-        dismiss(id);
-      }, toastDuration);
-      timersRef.current.set(id, timer);
+      const id = Date.now() + Math.floor(Math.random() * 1000);
+      setMessages((currentMessages) => [...currentMessages, { id, type, text: cleanText }]);
+      window.setTimeout(() => dismissMessage(id), 5000);
     },
-    [dismiss],
+    [dismissMessage],
   );
 
-  useEffect(() => {
-    const timers = timersRef.current;
+  const clearMessages = useCallback(() => setMessages([]), []);
 
-    return () => {
-      timers.forEach((timer) => window.clearTimeout(timer));
-      timers.clear();
-    };
-  }, []);
-
-  const value = useMemo(
+  const value = useMemo<MessageContextValue>(
     () => ({
-      success: (message: AddMessageInput | string) => addMessage('success', message),
-      error: (message: AddMessageInput | string) => addMessage('error', message),
-      warning: (message: AddMessageInput | string) => addMessage('warning', message),
-      dismiss,
+      showMessage,
+      showSuccess: (text) => showMessage('success', text),
+      showError: (text) => showMessage('error', text),
+      showWarning: (text) => showMessage('warning', text),
+      dismissMessage,
+      clearMessages,
     }),
-    [addMessage, dismiss],
+    [clearMessages, dismissMessage, showMessage],
   );
 
   return (
     <MessageContext.Provider value={value}>
       {children}
-      <ToastViewport messages={messages} onDismiss={dismiss} />
+      <div className="fixed right-6 top-6 z-50 grid w-[min(24rem,calc(100vw-3rem))] gap-3">
+        {messages.map((message) => (
+          <MessageToast key={message.id} message={message} onDismiss={dismissMessage} />
+        ))}
+      </div>
     </MessageContext.Provider>
   );
 }
@@ -131,71 +99,78 @@ export function useMessages() {
   return context;
 }
 
-function normalizeMessage(input: AddMessageInput | string): AddMessageInput {
-  if (typeof input === 'string') {
-    return { title: input };
-  }
-
-  return input;
-}
-
-function ToastViewport({
-  messages,
-  onDismiss,
+export function useRouteMessages({
+  successMessage,
+  errorMessage,
 }: {
-  messages: ToastMessage[];
-  onDismiss: (id: number) => void;
+  successMessage?: string | null;
+  errorMessage?: string | null;
 }) {
-  if (messages.length === 0) {
-    return null;
-  }
+  const { showError, showSuccess } = useMessages();
 
-  return (
-    <div className="fixed right-4 top-4 z-50 grid w-[calc(100%-2rem)] max-w-sm gap-3 sm:right-6 sm:top-6">
-      {messages.map((message) => (
-        <Toast key={message.id} message={message} onDismiss={onDismiss} />
-      ))}
-    </div>
-  );
+  useEffect(() => {
+    if (successMessage) {
+      showSuccess(successMessage);
+      clearToastSearchParam();
+    }
+  }, [showSuccess, successMessage]);
+
+  useEffect(() => {
+    if (errorMessage) {
+      showError(errorMessage);
+    }
+  }, [errorMessage, showError]);
 }
 
-function Toast({
+function MessageToast({
   message,
   onDismiss,
 }: {
-  message: ToastMessage;
+  message: Message;
   onDismiss: (id: number) => void;
 }) {
-  const variantStyles = toastVariantStyles[message.variant];
-  const Icon = variantStyles.Icon;
+  const style = messageStyles[message.type];
+  const Icon = style.icon;
+  const isError = message.type === 'error';
 
   return (
     <div
-      role={message.variant === 'error' ? 'alert' : 'status'}
-      className={cn(
-        'flex items-start gap-3 rounded-md border p-4 shadow-lg',
-        variantStyles.className,
-      )}
+      aria-live={isError ? 'assertive' : 'polite'}
+      className={[
+        'flex items-start gap-3 rounded-md border-l-4 border-y border-r bg-[var(--rootly-surface)] px-4 py-3 text-sm shadow-lg',
+        style.className,
+      ].join(' ')}
+      role={isError ? 'alert' : 'status'}
     >
-      <Icon className={cn('mt-0.5 h-5 w-5 shrink-0', variantStyles.iconClassName)} />
-      <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold leading-5">{message.title}</p>
-        {message.description ? (
-          <p className="mt-1 text-sm leading-5 text-[var(--rootly-text-muted)]">
-            {message.description}
-          </p>
-        ) : null}
-      </div>
+      <Icon aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0" />
+      <p className="min-w-0 flex-1 font-medium leading-5 text-[var(--rootly-text)]">
+        {message.text}
+      </p>
       <Button
         type="button"
-        variant="ghost"
         size="icon"
+        variant="ghost"
+        className="h-6 w-6 shrink-0"
         aria-label="Dismiss message"
-        className="h-7 w-7"
         onClick={() => onDismiss(message.id)}
       >
-        <X className="h-4 w-4" />
+        <X aria-hidden="true" className="h-3.5 w-3.5" />
       </Button>
     </div>
   );
+}
+
+function clearToastSearchParam() {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  const url = new URL(window.location.href);
+
+  if (!url.searchParams.has('toast')) {
+    return;
+  }
+
+  url.searchParams.delete('toast');
+  window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
 }

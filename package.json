@@ -32,9 +32,11 @@
     "fastify": "~5.2.1",
     "fastify-plugin": "~5.0.1",
     "isbot": "^4.4.0",
+    "konva": "^10.3.0",
     "lucide-react": "^1.31.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-konva": "^18.2.16",
     "tailwind-merge": "^3.6.0",
     "zod": "^4.1.12"
   },

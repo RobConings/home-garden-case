@@ -2,6 +2,7 @@ import type { LoaderFunctionArgs, MetaFunction } from '@remix-run/node';
 import { Outlet, useLoaderData } from '@remix-run/react';
 import { DashboardShell } from '@/features/dashboard/components';
 import { requireUser } from '@/lib/session.server';
+import { MessageProvider } from '@/providers/message-provider';
 
 export const meta: MetaFunction = () => [
   { title: 'Dashboard | Rootly' },
@@ -22,7 +23,9 @@ export default function Dashboard() {
 
   return (
     <DashboardShell user={user}>
-      <Outlet context={{ user }} />
+      <MessageProvider>
+        <Outlet context={{ user }} />
+      </MessageProvider>
     </DashboardShell>
   );
 }

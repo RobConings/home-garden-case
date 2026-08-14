@@ -1,5 +1,6 @@
 export * from './app-shell';
 export * from './content-section';
+export * from './editor-layout';
 export * from './page-container';
 export * from './page-divider';
 export * from './page-grid';
