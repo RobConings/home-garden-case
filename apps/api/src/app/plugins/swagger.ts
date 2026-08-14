@@ -43,7 +43,5 @@ export default fp(async function (fastify: FastifyInstance) {
         next();
       },
     },
-    staticCSP: true,
-    transformStaticCSP: (header) => header,
   });
 });
