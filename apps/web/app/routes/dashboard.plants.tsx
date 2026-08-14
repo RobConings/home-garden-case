@@ -6,7 +6,6 @@ import {
   useActionData,
   useFetcher,
   useLoaderData,
-  useNavigation,
 } from '@remix-run/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { CheckCircle2, Pencil, Trash2, XCircle } from 'lucide-react';
@@ -18,13 +17,11 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import {
   createPlantLibraryEntry,
   deletePlantLibraryEntry,
-  getPlantLibraryEntry,
   getPlantLibraryPage,
   type PlantLibraryEntry,
   type PlantLibraryPage,
   updatePlantLibraryEntry,
 } from '@/features/plants/api';
-import { PlantLibraryForm } from '@/features/plants/components';
 import { ApiClientError } from '@/lib/api.server';
 import { requireUser } from '@/lib/session.server';
 
@@ -53,20 +50,24 @@ export const meta: MetaFunction = () => [
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const user = await requireUser(request);
+  const url = new URL(request.url);
+  if (url.searchParams.get('new') === '1') {
+    throw redirect('/dashboard/plants/new');
+  }
+
   const plantPage = await getPlantLibraryPage(user.userId, {
     limit: plantPageSize,
     offset: 0,
   });
-  const url = new URL(request.url);
-  const isCreating = url.searchParams.get('new') === '1';
   const editParam = url.searchParams.get('edit');
   const editId = editParam ? Number(editParam) : Number.NaN;
-  const toast = getToast(url.searchParams.get('toast'));
-  const editPlant = Number.isFinite(editId)
-    ? await getEditablePlant(user.userId, editId)
-    : null;
+  if (Number.isFinite(editId)) {
+    throw redirect(`/dashboard/plants/${editId}/edit`);
+  }
 
-  return { user, plantPage, editPlant, isCreating, toast };
+  const toast = getToast(url.searchParams.get('toast'));
+
+  return { user, plantPage, toast };
 }
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -115,17 +116,14 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function DashboardPlants() {
-  const { plantPage, editPlant, isCreating, toast } = useLoaderData<typeof loader>();
+  const { plantPage, toast } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
-  const navigation = useNavigation();
   const plantFetcher = useFetcher<PlantLibraryResourceData>();
   const initialSearchSkipped = useRef(false);
   const [query, setQuery] = useState('');
   const [plants, setPlants] = useState(plantPage.items);
   const [hasMore, setHasMore] = useState(plantPage.hasMore);
-  const isSubmitting = navigation.state === 'submitting';
   const isLoadingPlants = plantFetcher.state !== 'idle';
-  const showForm = isCreating || Boolean(editPlant);
   const visibleToast = actionData?.toast ?? toast;
 
   useEffect(() => {
@@ -193,26 +191,11 @@ export default function DashboardPlants() {
           title="Plants"
           description="Choose from common plants or add your own care profile."
           actions={
-            showForm ? (
-              <Button asChild variant="secondary">
-                <Link to="/dashboard/plants">Cancel</Link>
-              </Button>
-            ) : (
-              <Button asChild>
-                <Link to="/dashboard/plants?new=1">Add new plant</Link>
-              </Button>
-            )
+            <Button asChild>
+              <Link to="/dashboard/plants/new">Add new plant</Link>
+            </Button>
           }
         />
-
-        {showForm ? (
-          <PlantLibraryForm
-            key={editPlant?.plantLibraryId ?? 'create'}
-            as={Form}
-            plant={editPlant ?? undefined}
-            isSubmitting={isSubmitting}
-          />
-        ) : null}
 
         <GeneralList
           items={plants}
@@ -342,7 +325,7 @@ function PlantActions({ plant }: { plant: PlantLibraryEntry }) {
   return (
     <div className="flex justify-end gap-2">
       <Button asChild variant="secondary" size="sm">
-        <Link to={`/dashboard/plants?edit=${plant.plantLibraryId}`}>
+        <Link to={`/dashboard/plants/${plant.plantLibraryId}/edit`}>
           <Pencil aria-hidden="true" className="h-3.5 w-3.5" />
           Edit
         </Link>
@@ -440,15 +423,6 @@ function optionalString(value: FormDataEntryValue | null) {
 function optionalNumber(value: FormDataEntryValue | null) {
   const text = String(value || '').trim();
   return text ? Number(text) : null;
-}
-
-async function getEditablePlant(userId: number, plantLibraryId: number) {
-  try {
-    const plant = await getPlantLibraryEntry(plantLibraryId, userId);
-    return plant.source === 'user' ? plant : null;
-  } catch {
-    return null;
-  }
 }
 
 function createPlantResourceUrl({ search, offset }: { search: string; offset: number }) {

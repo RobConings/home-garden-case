@@ -34,24 +34,13 @@ export function GardenForm({
       <input type="hidden" name="intent" value={isEditing ? 'update' : 'create'} />
       {garden ? <input type="hidden" name="gardenId" value={garden.gardenId} /> : null}
 
-      <PageGrid columns={2} gap="sm">
+      <PageGrid columns={1} gap="sm">
         <Field id="gardenName" label="Name">
           <Input
             id="gardenName"
             name="gardenName"
             defaultValue={garden?.gardenName}
-            placeholder="Kitchen garden"
-            required
-          />
-        </Field>
-        <Field id="locationDescription" label="Postal code">
-          <Input
-            id="locationDescription"
-            name="locationDescription"
-            defaultValue={garden?.locationDescription ?? ''}
-            placeholder="1000"
-            inputMode="numeric"
-            autoComplete="postal-code"
+            placeholder="Home garden"
             required
           />
         </Field>

@@ -1,6 +1,6 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from '@remix-run/node';
 import { json, redirect } from '@remix-run/node';
-import { Form, Link, useActionData, useLoaderData, useNavigation } from '@remix-run/react';
+import { Form, Link, useActionData, useLoaderData } from '@remix-run/react';
 import { useEffect, useState } from 'react';
 import { CheckCircle2, Pencil, Trash2, XCircle } from 'lucide-react';
 import { PageContainer, PageRow, PageStack } from '@/components/layout';
@@ -11,12 +11,10 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import {
   createGarden,
   deleteGarden,
-  getGarden,
   getGardens,
   type Garden,
   updateGarden,
 } from '@/features/gardens/api';
-import { GardenForm } from '@/features/gardens/components';
 import { ApiClientError } from '@/lib/api.server';
 import { requireUser } from '@/lib/session.server';
 
@@ -39,15 +37,21 @@ export const meta: MetaFunction = () => [
 
 export async function loader({ request }: LoaderFunctionArgs) {
   await requireUser(request);
-  const gardens = await getGardens();
   const url = new URL(request.url);
-  const isCreating = url.searchParams.get('new') === '1';
+  if (url.searchParams.get('new') === '1') {
+    throw redirect('/dashboard/gardens/new');
+  }
+
+  const gardens = await getGardens();
   const editParam = url.searchParams.get('edit');
   const editId = editParam ? Number(editParam) : Number.NaN;
-  const toast = getToast(url.searchParams.get('toast'));
-  const editGarden = Number.isFinite(editId) ? await getEditableGarden(editId) : null;
+  if (Number.isFinite(editId)) {
+    throw redirect(`/dashboard/gardens/${editId}/edit`);
+  }
 
-  return { gardens, editGarden, isCreating, toast };
+  const toast = getToast(url.searchParams.get('toast'));
+
+  return { gardens, toast };
 }
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -93,11 +97,8 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function DashboardGardens() {
-  const { gardens, editGarden, isCreating, toast } = useLoaderData<typeof loader>();
+  const { gardens, toast } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
-  const navigation = useNavigation();
-  const isSubmitting = navigation.state === 'submitting';
-  const showForm = isCreating || Boolean(editGarden);
   const visibleToast = actionData?.toast ?? toast;
 
   return (
@@ -107,28 +108,13 @@ export default function DashboardGardens() {
         <PageTitle
           eyebrow="Garden library"
           title="Gardens"
-          description="Track each growing space by location, dimensions, and sun direction."
+          description="Track each growing space by dimensions and sun direction."
           actions={
-            showForm ? (
-              <Button asChild variant="secondary">
-                <Link to="/dashboard/gardens">Cancel</Link>
-              </Button>
-            ) : (
-              <Button asChild>
-                <Link to="/dashboard/gardens?new=1">Add new garden</Link>
-              </Button>
-            )
+            <Button asChild>
+              <Link to="/dashboard/gardens/new">Add new garden</Link>
+            </Button>
           }
         />
-
-        {showForm ? (
-          <GardenForm
-            key={editGarden?.gardenId ?? 'create'}
-            as={Form}
-            garden={editGarden ?? undefined}
-            isSubmitting={isSubmitting}
-          />
-        ) : null}
 
         <GeneralList
           items={gardens}
@@ -136,7 +122,6 @@ export default function DashboardGardens() {
           getSearchText={(garden) =>
             [
               garden.gardenName,
-              garden.locationDescription,
               garden.sunDirection,
               formatSunDirection(garden.sunDirection),
               `${garden.totalWidth}m wide`,
@@ -160,9 +145,6 @@ export default function DashboardGardens() {
               render: (garden) => (
                 <div>
                   <p className="font-medium text-[var(--rootly-text)]">{garden.gardenName}</p>
-                  <p className="text-xs text-[var(--rootly-text-muted)]">
-                    {garden.locationDescription}
-                  </p>
                 </div>
               ),
             },
@@ -200,10 +182,6 @@ function GardenCard({ garden }: { garden: Garden }) {
       </CardHeader>
       <CardContent className="grid gap-3 text-sm text-[var(--rootly-text-muted)]">
         <p>
-          <span className="font-medium text-[var(--rootly-text)]">Postal code:</span>{' '}
-          {garden.locationDescription}
-        </p>
-        <p>
           <span className="font-medium text-[var(--rootly-text)]">Dimensions:</span>{' '}
           {garden.totalWidth} x {garden.totalHeight} m
         </p>
@@ -223,7 +201,7 @@ function GardenActions({ garden }: { garden: Garden }) {
   return (
     <div className="flex justify-end gap-2">
       <Button asChild variant="secondary" size="sm">
-        <Link to={`/dashboard/gardens?edit=${garden.gardenId}`}>
+        <Link to={`/dashboard/gardens/${garden.gardenId}/edit`}>
           <Pencil aria-hidden="true" className="h-3.5 w-3.5" />
           Edit
         </Link>
@@ -298,28 +276,15 @@ function readGardenPayload(formData: FormData) {
 
   return {
     gardenName: String(formData.get('gardenName') || '').trim(),
-    locationDescription: optionalString(formData.get('locationDescription')),
+    locationDescription: null,
     totalWidth,
     totalHeight,
     sunDirection: String(formData.get('sunDirection') || 'south') as Garden['sunDirection'],
   };
 }
 
-function optionalString(value: FormDataEntryValue | null) {
-  const text = String(value || '').trim();
-  return text ? text : null;
-}
-
 function requiredNumber(value: FormDataEntryValue | null) {
   return Number(String(value || '').trim());
-}
-
-async function getEditableGarden(gardenId: number) {
-  try {
-    return await getGarden(gardenId);
-  } catch {
-    return null;
-  }
 }
 
 function formatSunDirection(value: Garden['sunDirection']) {

@@ -70,10 +70,10 @@ export function DashboardHome({ user }: DashboardShellProps) {
           <section className="lg:[grid-area:main]">
             <EmptyState
               title="Start with your first garden"
-              description="Add a garden to track planting space, locations, and the plants growing there."
+              description="Add a garden to track planting space and the plants growing there."
               action={
                 <Button asChild>
-                  <Link to="/dashboard/gardens?new=1">
+                  <Link to="/dashboard/gardens/new">
                     <Plus aria-hidden="true" className="h-4 w-4" />
                     Add garden
                   </Link>
