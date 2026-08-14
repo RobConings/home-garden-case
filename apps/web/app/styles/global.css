@@ -95,3 +95,13 @@ button:disabled {
   background: var(--rootly-primary-soft);
   color: var(--rootly-text);
 }
+
+@keyframes rootly-progress {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(220%);
+  }
+}

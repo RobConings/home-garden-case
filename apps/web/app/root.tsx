@@ -1,4 +1,5 @@
 import type { LinksFunction, LoaderFunctionArgs, MetaFunction } from '@remix-run/node';
+import { useEffect, useState } from 'react';
 import {
   isRouteErrorResponse,
   Link,
@@ -7,7 +8,9 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
-  useLoaderData,
+  useLocation,
+  useNavigation,
+  useRouteLoaderData,
   useRouteError,
 } from '@remix-run/react';
 import { AppProviders } from '@/providers';
@@ -75,7 +78,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
-  const { user } = useLoaderData<typeof loader>();
+  const rootData = useRouteLoaderData<typeof loader>('root');
+  const user = rootData?.user ?? null;
   const themePreference = isThemeMode(user?.themePreference) ? user.themePreference : null;
   const themeInitScript = createThemeInitScript(themePreference);
 
@@ -103,7 +107,100 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  return <Outlet />;
+  return (
+    <>
+      <RouteChangeLoader />
+      <Outlet />
+    </>
+  );
+}
+
+function RouteChangeLoader() {
+  const navigation = useNavigation();
+  const location = useLocation();
+  const [isOptimisticPending, setIsOptimisticPending] = useState(false);
+  const isNavigating = navigation.state !== 'idle' || isOptimisticPending;
+
+  useEffect(() => {
+    setIsOptimisticPending(false);
+  }, [location.key]);
+
+  useEffect(() => {
+    if (navigation.state === 'idle') {
+      setIsOptimisticPending(false);
+    }
+  }, [navigation.state]);
+
+  useEffect(() => {
+    function handleClick(event: MouseEvent) {
+      if (
+        event.defaultPrevented ||
+        event.button !== 0 ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.shiftKey ||
+        event.altKey
+      ) {
+        return;
+      }
+
+      if (!(event.target instanceof Element)) {
+        return;
+      }
+
+      const link = event.target.closest('a[href]');
+
+      if (!link || shouldIgnoreNavigationUrl(link.getAttribute('href'))) {
+        return;
+      }
+
+      setIsOptimisticPending(true);
+    }
+
+    function handleSubmit(event: SubmitEvent) {
+      if (!event.defaultPrevented) {
+        setIsOptimisticPending(true);
+      }
+    }
+
+    document.addEventListener('click', handleClick, true);
+    document.addEventListener('submit', handleSubmit, true);
+
+    return () => {
+      document.removeEventListener('click', handleClick, true);
+      document.removeEventListener('submit', handleSubmit, true);
+    };
+  }, []);
+
+  if (!isNavigating) {
+    return null;
+  }
+
+  return (
+    <div className="fixed inset-x-0 top-0 z-50 pointer-events-none">
+      <div className="h-1 overflow-hidden bg-[var(--rootly-primary-soft)]">
+        <div className="h-full w-1/2 animate-[rootly-progress_1.1s_ease-in-out_infinite] rounded-r-full bg-[var(--rootly-primary)]" />
+      </div>
+      <div className="mx-auto mt-3 flex w-fit items-center gap-3 rounded-md border border-[var(--rootly-border)] bg-[var(--rootly-surface)]/95 px-4 py-2 text-sm font-medium text-[var(--rootly-text)] shadow-[var(--rootly-shadow)] backdrop-blur">
+        <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-[var(--rootly-primary)]" />
+        Loading page
+      </div>
+    </div>
+  );
+}
+
+function shouldIgnoreNavigationUrl(href: string | null) {
+  if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:')) {
+    return true;
+  }
+
+  try {
+    const url = new URL(href, window.location.href);
+
+    return url.origin !== window.location.origin || url.href === window.location.href;
+  } catch {
+    return true;
+  }
 }
 
 export function ErrorBoundary() {

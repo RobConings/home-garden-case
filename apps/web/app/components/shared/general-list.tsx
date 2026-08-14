@@ -56,6 +56,7 @@ export function GeneralList<TItem>({
   const [localQuery, setLocalQuery] = useState('');
   const [view, setView] = useState<'cards' | 'list'>('cards');
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const didRequestLoadMoreRef = useRef(false);
   const query = searchValue ?? localQuery;
   const normalizedQuery = query.trim().toLowerCase();
   const usesServerSearch = Boolean(onSearchChange);
@@ -72,6 +73,12 @@ export function GeneralList<TItem>({
   }, [getSearchText, items, normalizedQuery, usesServerSearch]);
 
   useEffect(() => {
+    if (!isLoading) {
+      didRequestLoadMoreRef.current = false;
+    }
+  }, [isLoading, items.length]);
+
+  useEffect(() => {
     if (!hasMore || isLoading || !onLoadMore) {
       return;
     }
@@ -83,7 +90,10 @@ export function GeneralList<TItem>({
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) {
+        const isIntersecting = entries.some((entry) => entry.isIntersecting);
+
+        if (isIntersecting && !didRequestLoadMoreRef.current) {
+          didRequestLoadMoreRef.current = true;
           onLoadMore();
         }
       },

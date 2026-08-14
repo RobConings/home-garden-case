@@ -1,4 +1,5 @@
 import type { ElementType } from 'react';
+import { Info } from 'lucide-react';
 import { PageGrid } from '@/components/layout';
 import { Field, GeneralForm } from '@/components/shared';
 import { Button } from '@/components/ui/button';
@@ -19,7 +20,6 @@ export function GardenForm({
   as: FormComponent = 'form',
 }: GardenFormProps) {
   const isEditing = Boolean(garden);
-  const lockedDescription = 'Set on creation for the editor grid. This cannot be adjusted later.';
 
   return (
     <GeneralForm
@@ -50,7 +50,7 @@ export function GardenForm({
       </PageGrid>
 
       <PageGrid columns={3} gap="sm">
-        <Field id="totalWidth" label="Total width (m)" description={lockedDescription}>
+        <Field id="totalWidth" label="Total width (m)">
           <Input
             id="totalWidth"
             name="totalWidth"
@@ -62,7 +62,7 @@ export function GardenForm({
             required
           />
         </Field>
-        <Field id="totalHeight" label="Total height (m)" description={lockedDescription}>
+        <Field id="totalHeight" label="Total height (m)">
           <Input
             id="totalHeight"
             name="totalHeight"
@@ -89,11 +89,7 @@ export function GardenForm({
         </Field>
       </PageGrid>
 
-      <Field
-        id="gridSizeCm"
-        label="Grid size (cm)"
-        description="Set on creation for editor spacing. This cannot be adjusted later."
-      >
+      <Field id="gridSizeCm" label="Grid size (cm)">
         <Input
           id="gridSizeCm"
           name="gridSizeCm"
@@ -105,6 +101,17 @@ export function GardenForm({
           required
         />
       </Field>
+
+      <div className="flex gap-3 rounded-md border border-[var(--rootly-border)] bg-[var(--rootly-surface-muted)] p-4 text-sm leading-6 text-[var(--rootly-text-muted)]">
+        <Info aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-[var(--rootly-primary)]" />
+        <div>
+          <p className="font-medium text-[var(--rootly-text)]">Editor grid settings</p>
+          <p className="mt-1">
+            Total width, total height, and grid size are set when the garden is created because they
+            define the editor grid. These values cannot be adjusted later.
+          </p>
+        </div>
+      </div>
     </GeneralForm>
   );
 }

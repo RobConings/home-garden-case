@@ -21,10 +21,16 @@ const plantPageSize = 12;
 export function PlantLibraryList({ initialPage }: PlantLibraryListProps) {
   const plantFetcher = useFetcher<PlantLibraryResourceData>();
   const initialSearchSkipped = useRef(false);
+  const pendingRequestUrlRef = useRef<string | null>(null);
+  const loadPlantPageRef = useRef(plantFetcher.load);
   const [query, setQuery] = useState('');
   const [plants, setPlants] = useState(initialPage.items);
   const [hasMore, setHasMore] = useState(initialPage.hasMore);
   const isLoadingPlants = plantFetcher.state !== 'idle';
+
+  useEffect(() => {
+    loadPlantPageRef.current = plantFetcher.load;
+  }, [plantFetcher.load]);
 
   useEffect(() => {
     setPlants(initialPage.items);
@@ -41,6 +47,7 @@ export function PlantLibraryList({ initialPage }: PlantLibraryListProps) {
       return;
     }
 
+    pendingRequestUrlRef.current = null;
     setHasMore(plantPageData.hasMore);
     setPlants((currentPlants) => {
       if (plantPageData.offset === 0) {
@@ -57,17 +64,32 @@ export function PlantLibraryList({ initialPage }: PlantLibraryListProps) {
   }, [plantFetcher.data, query]);
 
   useEffect(() => {
+    if (plantFetcher.state === 'idle') {
+      pendingRequestUrlRef.current = null;
+    }
+  }, [plantFetcher.state]);
+
+  const requestPlantPage = useCallback((url: string) => {
+    if (pendingRequestUrlRef.current === url) {
+      return;
+    }
+
+    pendingRequestUrlRef.current = url;
+    loadPlantPageRef.current(url);
+  }, []);
+
+  useEffect(() => {
     if (!initialSearchSkipped.current) {
       initialSearchSkipped.current = true;
       return;
     }
 
     const timeoutId = window.setTimeout(() => {
-      plantFetcher.load(createPlantResourceUrl({ search: query, offset: 0 }));
+      requestPlantPage(createPlantResourceUrl({ search: query, offset: 0 }));
     }, 250);
 
     return () => window.clearTimeout(timeoutId);
-  }, [plantFetcher, query]);
+  }, [query, requestPlantPage]);
 
   const handlePlantSearchChange = useCallback((nextQuery: string) => {
     setQuery(nextQuery);
@@ -79,8 +101,8 @@ export function PlantLibraryList({ initialPage }: PlantLibraryListProps) {
       return;
     }
 
-    plantFetcher.load(createPlantResourceUrl({ search: query, offset: plants.length }));
-  }, [hasMore, isLoadingPlants, plantFetcher, plants.length, query]);
+    requestPlantPage(createPlantResourceUrl({ search: query, offset: plants.length }));
+  }, [hasMore, isLoadingPlants, plants.length, query, requestPlantPage]);
 
   return (
     <GeneralList

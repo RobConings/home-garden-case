@@ -1,12 +1,22 @@
 import { Link, useFetcher, useLoaderData } from '@remix-run/react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+} from 'react';
 import {
   ArrowLeft,
   Check,
   Eraser,
+  GripHorizontal,
+  Maximize2,
+  Minimize2,
   Monitor,
   MousePointer2,
   Plus,
+  RotateCcw,
   Save,
   Sprout,
   Sun,
@@ -74,6 +84,19 @@ type CanvasSize = {
   height: number;
 };
 
+type PanelPosition = {
+  x: number;
+  y: number;
+};
+
+type PanelDragState = {
+  pointerId: number;
+  startX: number;
+  startY: number;
+  originX: number;
+  originY: number;
+};
+
 type CanvasTheme = {
   background: string;
   surface: string;
@@ -129,6 +152,8 @@ export function GardenEditor({ garden }: { garden: Garden }) {
   const saveFetcher = useFetcher<GardenEditorActionData>();
   const { showError, showSuccess } = useMessages();
   const boardRef = useRef<HTMLDivElement | null>(null);
+  const actionsPanelRef = useRef<HTMLDivElement | null>(null);
+  const actionsPanelDragRef = useRef<PanelDragState | null>(null);
   const [konva, setKonva] = useState<KonvaModule | null>(null);
   const [editorMode, setEditorMode] = useState<EditorMode>('create');
   const [activeType, setActiveType] = useState<EditorShapeType>('plant_area');
@@ -146,11 +171,16 @@ export function GardenEditor({ garden }: { garden: Garden }) {
   const [showSun, setShowSun] = useState(true);
   const [canvasSize, setCanvasSize] = useState<CanvasSize>(defaultCanvasSize);
   const [canvasTheme, setCanvasTheme] = useState<CanvasTheme>(getCanvasTheme);
+  const [actionsPanelPosition, setActionsPanelPosition] = useState<PanelPosition | null>(null);
+  const [isActionsPanelMoved, setIsActionsPanelMoved] = useState(false);
+  const [isActionsPanelCompact, setIsActionsPanelCompact] = useState(false);
   const metrics = useMemo(() => createEditorMetrics(garden, canvasSize), [canvasSize, garden]);
   const selectedPlantLibraryEntry = getPlantLibraryEntry(plantLibrary, selectedPlantLibraryId);
   const selectedPlacedPlant = placedPlants.find((plant) => plant.id === selectedPlacedPlantId);
   const selectedShape = shapes.find((shape) => shape.id === selectedShapeId);
   const isSaving = saveFetcher.state !== 'idle';
+  const actionTextClassName = isActionsPanelCompact ? 'hidden' : 'hidden 2xl:inline';
+  const compactDetailsClassName = isActionsPanelCompact ? 'sr-only' : undefined;
 
   useEffect(() => {
     let isMounted = true;
@@ -188,6 +218,28 @@ export function GardenEditor({ garden }: { garden: Garden }) {
 
     return () => resizeObserver.disconnect();
   }, []);
+
+  useEffect(() => {
+    const panel = actionsPanelRef.current;
+
+    if (!panel || isActionsPanelMoved) {
+      return;
+    }
+
+    setActionsPanelPosition(getDefaultActionsPanelPosition(canvasSize, panel));
+  }, [canvasSize, isActionsPanelMoved]);
+
+  useEffect(() => {
+    const panel = actionsPanelRef.current;
+
+    if (!panel) {
+      return;
+    }
+
+    setActionsPanelPosition((currentPosition) =>
+      currentPosition ? clampPanelPosition(currentPosition, canvasSize, panel) : currentPosition,
+    );
+  }, [canvasSize, isActionsPanelCompact]);
 
   useEffect(() => {
     const updateTheme = () => setCanvasTheme(getCanvasTheme());
@@ -385,6 +437,58 @@ export function GardenEditor({ garden }: { garden: Garden }) {
     saveFetcher.submit(formData, { method: 'post' });
   }
 
+  function startActionsPanelDrag(event: ReactPointerEvent<HTMLButtonElement>) {
+    const position =
+      actionsPanelPosition ?? getDefaultActionsPanelPosition(canvasSize, actionsPanelRef.current);
+
+    actionsPanelDragRef.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      originX: position.x,
+      originY: position.y,
+    };
+    setActionsPanelPosition(position);
+    setIsActionsPanelMoved(true);
+    event.currentTarget.setPointerCapture(event.pointerId);
+    event.preventDefault();
+  }
+
+  function moveActionsPanel(event: ReactPointerEvent<HTMLButtonElement>) {
+    const dragState = actionsPanelDragRef.current;
+    const panel = actionsPanelRef.current;
+
+    if (!dragState || dragState.pointerId !== event.pointerId) {
+      return;
+    }
+
+    setActionsPanelPosition(
+      clampPanelPosition(
+        {
+          x: dragState.originX + event.clientX - dragState.startX,
+          y: dragState.originY + event.clientY - dragState.startY,
+        },
+        canvasSize,
+        panel,
+      ),
+    );
+  }
+
+  function stopActionsPanelDrag(event: ReactPointerEvent<HTMLButtonElement>) {
+    if (actionsPanelDragRef.current?.pointerId === event.pointerId) {
+      actionsPanelDragRef.current = null;
+    }
+
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+  }
+
+  function resetActionsPanelPosition() {
+    setIsActionsPanelMoved(false);
+    setActionsPanelPosition(getDefaultActionsPanelPosition(canvasSize, actionsPanelRef.current));
+  }
+
   return (
     <PageContainer
       minHeight="content"
@@ -544,7 +648,72 @@ export function GardenEditor({ garden }: { garden: Garden }) {
               ))}
             </div>
 
-            <div className="absolute right-4 top-4 grid w-[min(24rem,calc(100%-2rem))] gap-3 rounded-md border border-(--rootly-border) bg-(--rootly-surface)/95 p-4 shadow-sm backdrop-blur">
+            <div
+              ref={actionsPanelRef}
+              className={cn(
+                'absolute grid gap-3 rounded-md border border-(--rootly-border) bg-(--rootly-surface)/95 p-3 shadow-sm backdrop-blur',
+                isActionsPanelCompact
+                  ? 'w-[min(12rem,calc(100%-2rem))]'
+                  : 'w-[min(19rem,calc(100%-2rem))] 2xl:w-[24rem] 2xl:p-4',
+                actionsPanelPosition ? null : 'right-4 top-4',
+              )}
+              style={
+                actionsPanelPosition
+                  ? {
+                      left: actionsPanelPosition.x,
+                      top: actionsPanelPosition.y,
+                    }
+                  : undefined
+              }
+            >
+              <div className="flex items-center justify-between gap-2">
+                <button
+                  type="button"
+                  aria-label="Move actions panel"
+                  title="Move actions panel"
+                  onPointerDown={startActionsPanelDrag}
+                  onPointerMove={moveActionsPanel}
+                  onPointerUp={stopActionsPanelDrag}
+                  onPointerCancel={stopActionsPanelDrag}
+                  className="inline-flex h-8 flex-1 cursor-move items-center justify-center rounded border border-(--rootly-border) bg-(--rootly-surface-muted) text-(--rootly-text-muted) transition-colors hover:bg-(--rootly-surface) hover:text-(--rootly-text) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--rootly-primary)"
+                >
+                  <GripHorizontal aria-hidden="true" className="h-4 w-4" />
+                </button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="icon"
+                  aria-label="Reset actions panel position"
+                  title="Reset actions panel position"
+                  onClick={resetActionsPanelPosition}
+                  className="h-8 w-8"
+                >
+                  <RotateCcw aria-hidden="true" className="h-4 w-4" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="icon"
+                  aria-label={
+                    isActionsPanelCompact
+                      ? 'Expand actions panel text'
+                      : 'Minimize actions panel text'
+                  }
+                  title={
+                    isActionsPanelCompact
+                      ? 'Expand actions panel text'
+                      : 'Minimize actions panel text'
+                  }
+                  onClick={() => setIsActionsPanelCompact((isCompact) => !isCompact)}
+                  className="h-8 w-8"
+                >
+                  {isActionsPanelCompact ? (
+                    <Maximize2 aria-hidden="true" className="h-4 w-4" />
+                  ) : (
+                    <Minimize2 aria-hidden="true" className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
               <div
                 aria-label="Editor mode"
                 className="grid grid-cols-3 gap-1 rounded-md border border-(--rootly-border) bg-(--rootly-surface-muted) p-1"
@@ -558,9 +727,11 @@ export function GardenEditor({ garden }: { garden: Garden }) {
                       'bg-(--rootly-surface) text-(--rootly-text) shadow-sm',
                   )}
                   aria-pressed={editorMode === 'create'}
+                  aria-label="Create shape mode"
+                  title="Create"
                 >
                   <Plus aria-hidden="true" className="h-4 w-4" />
-                  Create
+                  <span className={actionTextClassName}>Create</span>
                 </button>
                 <button
                   type="button"
@@ -571,9 +742,11 @@ export function GardenEditor({ garden }: { garden: Garden }) {
                       'bg-(--rootly-surface) text-(--rootly-text) shadow-sm',
                   )}
                   aria-pressed={editorMode === 'select'}
+                  aria-label="Select mode"
+                  title="Select"
                 >
                   <MousePointer2 aria-hidden="true" className="h-4 w-4" />
-                  Select
+                  <span className={actionTextClassName}>Select</span>
                 </button>
                 <button
                   type="button"
@@ -584,15 +757,17 @@ export function GardenEditor({ garden }: { garden: Garden }) {
                       'bg-(--rootly-surface) text-(--rootly-text) shadow-sm',
                   )}
                   aria-pressed={editorMode === 'plant'}
+                  aria-label="Plant mode"
+                  title="Plant"
                 >
                   <Sprout aria-hidden="true" className="h-4 w-4" />
-                  Plant
+                  <span className={actionTextClassName}>Plant</span>
                 </button>
               </div>
 
               {editorMode === 'create' ? (
                 <>
-                  <div>
+                  <div className={compactDetailsClassName}>
                     <p className="text-sm font-semibold text-(--rootly-text)">
                       Drawing {getShapeOption(activeType).label.toLowerCase()}
                     </p>
@@ -610,9 +785,11 @@ export function GardenEditor({ garden }: { garden: Garden }) {
                       size="sm"
                       onClick={finishShape}
                       disabled={draftPoints.length < 3}
+                      aria-label="Complete shape"
+                      title="Complete shape"
                     >
                       <Check aria-hidden="true" className="h-4 w-4" />
-                      Complete shape
+                      <span className={actionTextClassName}>Complete shape</span>
                     </Button>
                     <Button
                       type="button"
@@ -620,9 +797,11 @@ export function GardenEditor({ garden }: { garden: Garden }) {
                       variant="secondary"
                       onClick={() => setDraftPoints((points) => points.slice(0, -1))}
                       disabled={draftPoints.length === 0}
+                      aria-label="Undo point"
+                      title="Undo point"
                     >
                       <Undo2 aria-hidden="true" className="h-4 w-4" />
-                      Undo point
+                      <span className={actionTextClassName}>Undo point</span>
                     </Button>
                     <Button
                       type="button"
@@ -630,16 +809,23 @@ export function GardenEditor({ garden }: { garden: Garden }) {
                       variant="secondary"
                       onClick={() => setDraftPoints([])}
                       disabled={draftPoints.length === 0}
+                      aria-label="Clear draft"
+                      title="Clear draft"
                     >
                       <Eraser aria-hidden="true" className="h-4 w-4" />
-                      Clear draft
+                      <span className={actionTextClassName}>Clear draft</span>
                     </Button>
                   </div>
                 </>
               ) : editorMode === 'plant' ? (
                 <>
                   <div className="grid gap-2">
-                    <label className="text-sm font-semibold text-(--rootly-text)">
+                    <label
+                      className={cn(
+                        'text-sm font-semibold text-(--rootly-text)',
+                        compactDetailsClassName,
+                      )}
+                    >
                       Plant from library
                       <Select
                         value={String(selectedPlantLibraryId)}
@@ -654,7 +840,9 @@ export function GardenEditor({ garden }: { garden: Garden }) {
                         ))}
                       </Select>
                     </label>
-                    <p className="text-xs text-(--rootly-text-muted)">
+                    <p
+                      className={cn('text-xs text-(--rootly-text-muted)', compactDetailsClassName)}
+                    >
                       {selectedPlantLibraryEntry
                         ? `${selectedPlantSize} x ${selectedPlantSize} grid ${
                             selectedPlantSize === 1 ? 'cell' : 'cells'
@@ -688,10 +876,20 @@ export function GardenEditor({ garden }: { garden: Garden }) {
                   </div>
                   {selectedPlacedPlant ? (
                     <div className="grid gap-2 border-t border-(--rootly-border) pt-3">
-                      <p className="text-sm font-semibold text-(--rootly-text)">
+                      <p
+                        className={cn(
+                          'text-sm font-semibold text-(--rootly-text)',
+                          compactDetailsClassName,
+                        )}
+                      >
                         {getPlacedPlantName(selectedPlacedPlant, plantLibrary)}
                       </p>
-                      <p className="text-xs text-(--rootly-text-muted)">
+                      <p
+                        className={cn(
+                          'text-xs text-(--rootly-text-muted)',
+                          compactDetailsClassName,
+                        )}
+                      >
                         {formatPoint(selectedPlacedPlant)}, {selectedPlacedPlant.size} x{' '}
                         {selectedPlacedPlant.size}
                       </p>
@@ -700,20 +898,24 @@ export function GardenEditor({ garden }: { garden: Garden }) {
                         variant="danger"
                         size="sm"
                         onClick={removeSelectedPlacedPlant}
+                        aria-label="Remove selected plant"
+                        title="Remove selected plant"
                       >
                         <Trash2 aria-hidden="true" className="h-4 w-4" />
-                        Plant
+                        <span className={actionTextClassName}>Plant</span>
                       </Button>
                     </div>
                   ) : (
-                    <p className="text-sm text-(--rootly-text-muted)">
+                    <p
+                      className={cn('text-sm text-(--rootly-text-muted)', compactDetailsClassName)}
+                    >
                       Click inside a plant area to place a plant.
                     </p>
                   )}
                 </>
               ) : selectedShape ? (
                 <>
-                  <div>
+                  <div className={compactDetailsClassName}>
                     <p className="text-sm font-semibold text-(--rootly-text)">
                       {getShapeOption(selectedShape.type).label}
                     </p>
@@ -732,14 +934,16 @@ export function GardenEditor({ garden }: { garden: Garden }) {
                       size="sm"
                       onClick={removeSelectedShape}
                       disabled={!selectedShapeId}
+                      aria-label="Remove selected shape"
+                      title="Remove selected shape"
                     >
                       <Trash2 aria-hidden="true" className="h-4 w-4" />
-                      Shape
+                      <span className={actionTextClassName}>Shape</span>
                     </Button>
                   </div>
                 </>
               ) : (
-                <p className="text-sm text-(--rootly-text-muted)">
+                <p className={cn('text-sm text-(--rootly-text-muted)', compactDetailsClassName)}>
                   {draftPoints.length > 0
                     ? 'Draft paused. Switch to Create to continue it.'
                     : 'Select a shape or point to adjust it.'}
@@ -750,13 +954,23 @@ export function GardenEditor({ garden }: { garden: Garden }) {
                 <div className="flex items-center justify-between gap-3">
                   <span className="inline-flex items-center gap-2 text-sm font-semibold text-(--rootly-text)">
                     <Sun aria-hidden="true" className="h-4 w-4 text-(--rootly-accent)" />
-                    Sun
+                    <span className={compactDetailsClassName}>Sun</span>
                   </span>
-                  <span className="text-xs font-medium text-(--rootly-text-muted)">
+                  <span
+                    className={cn(
+                      'text-xs font-medium text-(--rootly-text-muted)',
+                      compactDetailsClassName,
+                    )}
+                  >
                     {formatSunTime(sunTime)}
                   </span>
                 </div>
-                <label className="flex items-center justify-between gap-3 text-sm font-medium text-(--rootly-text)">
+                <label
+                  className={cn(
+                    'flex items-center justify-between gap-3 text-sm font-medium text-(--rootly-text)',
+                    compactDetailsClassName,
+                  )}
+                >
                   <span>Show sun</span>
                   <input
                     type="checkbox"
@@ -775,7 +989,12 @@ export function GardenEditor({ garden }: { garden: Garden }) {
                   className="h-2 w-full cursor-pointer accent-(--rootly-accent)"
                   aria-label="Time of day"
                 />
-                <div className="flex justify-between text-[11px] font-medium text-(--rootly-text-muted)">
+                <div
+                  className={cn(
+                    'flex justify-between text-[11px] font-medium text-(--rootly-text-muted)',
+                    compactDetailsClassName,
+                  )}
+                >
                   <span>Morning</span>
                   <span>{getDirectionLabel(garden.sunDirection)} exposure</span>
                   <span>Evening</span>
@@ -1363,6 +1582,30 @@ function toCanvasLinePoints(points: GardenPoint[], metrics: EditorMetrics) {
 
 function roundToGrid(value: number, step: number) {
   return Math.round(value / step) * step;
+}
+
+function getDefaultActionsPanelPosition(
+  canvasSize: CanvasSize,
+  panel: HTMLDivElement | null,
+): PanelPosition {
+  return {
+    x: Math.max(16, canvasSize.width - (panel?.offsetWidth ?? 384) - 16),
+    y: 16,
+  };
+}
+
+function clampPanelPosition(
+  position: PanelPosition,
+  canvasSize: CanvasSize,
+  panel: HTMLDivElement | null,
+): PanelPosition {
+  const maxX = Math.max(16, canvasSize.width - (panel?.offsetWidth ?? 384) - 16);
+  const maxY = Math.max(16, canvasSize.height - (panel?.offsetHeight ?? 320) - 16);
+
+  return {
+    x: clamp(position.x, 16, maxX),
+    y: clamp(position.y, 16, maxY),
+  };
 }
 
 function getCanvasTheme(): CanvasTheme {
