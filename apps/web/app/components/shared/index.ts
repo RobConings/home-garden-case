@@ -3,6 +3,7 @@ export * from './banner';
 export * from './empty-state';
 export * from './field';
 export * from './general-form';
+export * from './general-list';
 export * from './feature-card';
 export * from './notification-callout';
 export * from './page-title';

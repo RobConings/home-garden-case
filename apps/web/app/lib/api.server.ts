@@ -41,6 +41,10 @@ export async function apiRequest<TResponse>(
     });
   }
 
+  if (response.status === 204) {
+    return undefined as TResponse;
+  }
+
   return (await response.json()) as TResponse;
 }
 

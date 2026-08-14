@@ -2,8 +2,11 @@ import { Link } from '@remix-run/react';
 import { ThemeToggle } from '@/components/shared';
 import { PageContainer, PageRow, PageSection } from '@/components/layout';
 import { Button } from '@/components/ui/button';
+import { useCurrentUser } from '@/providers';
 
 export function PublicHeader() {
+  const { isLoggedIn, user } = useCurrentUser();
+
   return (
     <PageSection
       spacing="none"
@@ -21,12 +24,25 @@ export function PublicHeader() {
         </Link>
         <PageRow as="nav" gap="sm" align="center">
           <ThemeToggle />
-          <Button asChild variant="ghost" size="sm">
-            <Link to="/login">Login</Link>
-          </Button>
-          <Button asChild size="sm">
-            <Link to="/register">Register</Link>
-          </Button>
+          {isLoggedIn ? (
+            <>
+              <span className="hidden text-sm font-medium text-[var(--rootly-text-muted)] sm:inline">
+                Hi, {user?.firstName}
+              </span>
+              <Button asChild size="sm">
+                <Link to="/dashboard">Go to dashboard</Link>
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button asChild variant="ghost" size="sm">
+                <Link to="/login">Login</Link>
+              </Button>
+              <Button asChild size="sm">
+                <Link to="/register">Register</Link>
+              </Button>
+            </>
+          )}
         </PageRow>
       </PageContainer>
     </PageSection>

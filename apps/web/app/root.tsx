@@ -1,4 +1,4 @@
-import type { LinksFunction, MetaFunction } from '@remix-run/node';
+import type { LinksFunction, LoaderFunctionArgs, MetaFunction } from '@remix-run/node';
 import {
   isRouteErrorResponse,
   Link,
@@ -7,17 +7,23 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useLoaderData,
   useRouteError,
 } from '@remix-run/react';
 import { AppProviders } from '@/providers';
 import { Button } from '@/components/ui/button';
+import { getCurrentUser } from '@/lib/session.server';
 import stylesheet from './styles/global.css?url';
 
-const themeInitScript = `
+function createThemeInitScript(themePreference?: 'light' | 'dark' | null) {
+  return `
   (() => {
     try {
+      const accountMode = ${JSON.stringify(themePreference ?? null)};
       const stored = localStorage.getItem('rootly-theme');
-      const mode = stored === 'light' || stored === 'dark'
+      const mode = accountMode === 'light' || accountMode === 'dark'
+        ? accountMode
+        : stored === 'light' || stored === 'dark'
         ? stored
         : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
       document.documentElement.classList.toggle('dark', mode === 'dark');
@@ -25,6 +31,7 @@ const themeInitScript = `
     } catch (_) {}
   })();
 `;
+}
 
 export const meta: MetaFunction = () => [
   {
@@ -55,7 +62,16 @@ export const links: LinksFunction = () => [
   { rel: 'stylesheet', href: stylesheet },
 ];
 
+export async function loader({ request }: LoaderFunctionArgs) {
+  const user = await getCurrentUser(request);
+
+  return { user };
+}
+
 export function Layout({ children }: { children: React.ReactNode }) {
+  const { user } = useLoaderData<typeof loader>();
+  const themeInitScript = createThemeInitScript(user?.themePreference);
+
   return (
     <html lang="en">
       <head>
@@ -66,7 +82,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        <AppProviders>{children}</AppProviders>
+        <AppProviders user={user}>{children}</AppProviders>
         <ScrollRestoration />
         <Scripts />
       </body>

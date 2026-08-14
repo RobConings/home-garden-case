@@ -67,6 +67,10 @@ export const resetPasswordSchema = z.object({
 
 z.globalRegistry.add(resetPasswordSchema, { id: 'ResetPassword' });
 
+export const themePreferenceSchema = z.enum(['light', 'dark']);
+
+z.globalRegistry.add(themePreferenceSchema, { id: 'ThemePreference' });
+
 export const updateUserSchema = createUserSchema
   .omit({
     password: true,
@@ -75,11 +79,18 @@ export const updateUserSchema = createUserSchema
 
 z.globalRegistry.add(updateUserSchema, { id: 'UpdateUser' });
 
+export const updateUserThemeSchema = z.object({
+  themePreference: themePreferenceSchema,
+});
+
+z.globalRegistry.add(updateUserThemeSchema, { id: 'UpdateUserTheme' });
+
 export const userResponseSchema = z.object({
   userId: z.number(),
   firstName: z.string().nullable(),
   lastName: z.string().nullable(),
   emailAddress: z.email(),
+  themePreference: themePreferenceSchema,
   createdAt: z.coerce.string(),
   updatedAt: z.coerce.string(),
 });

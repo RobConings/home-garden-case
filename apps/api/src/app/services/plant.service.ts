@@ -1,4 +1,5 @@
 import { GardenRepository } from '../database/repositories/garden.repository';
+import { PlantLibraryRepository } from '../database/repositories/plant-library.repository';
 import { PlantRepository } from '../database/repositories/plant.repository';
 import { NewPlant, Plant, PlantUpdate } from '../database/types';
 import { createPlantSchema, updatePlantSchema } from '../schemas/plant.schema';
@@ -7,10 +8,16 @@ import { NotFoundError, ValidationError } from '../shared/errors';
 export class PlantService {
   private readonly plantRepository: PlantRepository;
   private readonly gardenRepository: GardenRepository;
+  private readonly plantLibraryRepository: PlantLibraryRepository;
 
-  constructor(opts: { plantRepository: PlantRepository; gardenRepository: GardenRepository }) {
+  constructor(opts: {
+    plantRepository: PlantRepository;
+    gardenRepository: GardenRepository;
+    plantLibraryRepository: PlantLibraryRepository;
+  }) {
     this.plantRepository = opts.plantRepository;
     this.gardenRepository = opts.gardenRepository;
+    this.plantLibraryRepository = opts.plantLibraryRepository;
   }
 
   /**
@@ -53,6 +60,15 @@ export class PlantService {
       throw new NotFoundError(`Garden with ID ${validatedData.gardenId} not found`);
     }
 
+    if (validatedData.plantLibraryId) {
+      const libraryPlant = await this.plantLibraryRepository.findById(validatedData.plantLibraryId);
+      if (!libraryPlant) {
+        throw new NotFoundError(
+          `Plant library entry with ID ${validatedData.plantLibraryId} not found`,
+        );
+      }
+    }
+
     // Check if total surface area would be exceeded
     const existingPlants = await this.plantRepository.findByGardenId(validatedData.gardenId);
     const totalUsedArea = existingPlants.reduce((sum, plant) => sum + plant.surfaceAreaRequired, 0);
@@ -87,6 +103,15 @@ export class PlantService {
       const newGarden = await this.gardenRepository.findById(validatedData.gardenId);
       if (!newGarden) {
         throw new ValidationError(`Garden with ID ${validatedData.gardenId} not found`);
+      }
+    }
+
+    if (validatedData.plantLibraryId) {
+      const libraryPlant = await this.plantLibraryRepository.findById(validatedData.plantLibraryId);
+      if (!libraryPlant) {
+        throw new NotFoundError(
+          `Plant library entry with ID ${validatedData.plantLibraryId} not found`,
+        );
       }
     }
 

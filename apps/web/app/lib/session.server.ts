@@ -7,7 +7,7 @@ const userSessionKey = 'user';
 
 export type UserSession = Pick<
   UserResponse,
-  'userId' | 'firstName' | 'lastName' | 'emailAddress'
+  'userId' | 'firstName' | 'lastName' | 'emailAddress' | 'themePreference'
 >;
 
 const sessionStorage = createCookieSessionStorage({
@@ -26,7 +26,7 @@ export async function getCurrentUser(request: Request) {
   const session = await sessionStorage.getSession(request.headers.get('Cookie'));
   const user = session.get(userSessionKey);
 
-  return isUserSession(user) ? user : null;
+  return normalizeUserSession(user);
 }
 
 export async function requireUser(request: Request) {
@@ -58,6 +58,19 @@ export async function createUserSession({
   });
 }
 
+export async function updateCurrentUserSession({
+  request,
+  user,
+}: {
+  request: Request;
+  user: UserSession;
+}) {
+  const session = await sessionStorage.getSession(request.headers.get('Cookie'));
+  session.set(userSessionKey, user);
+
+  return await sessionStorage.commitSession(session);
+}
+
 export async function destroyUserSession(request: Request) {
   const session = await sessionStorage.getSession(request.headers.get('Cookie'));
 
@@ -68,16 +81,29 @@ export async function destroyUserSession(request: Request) {
   });
 }
 
-function isUserSession(value: unknown): value is UserSession {
+function normalizeUserSession(value: unknown): UserSession | null {
   if (!value || typeof value !== 'object') {
-    return false;
+    return null;
   }
 
   const candidate = value as Record<string, unknown>;
-  return (
-    typeof candidate.userId === 'number' &&
-    typeof candidate.firstName === 'string' &&
-    typeof candidate.lastName === 'string' &&
-    typeof candidate.emailAddress === 'string'
-  );
+  if (
+    typeof candidate.userId !== 'number' ||
+    (typeof candidate.firstName !== 'string' && candidate.firstName !== null) ||
+    (typeof candidate.lastName !== 'string' && candidate.lastName !== null) ||
+    typeof candidate.emailAddress !== 'string'
+  ) {
+    return null;
+  }
+
+  return {
+    userId: candidate.userId,
+    firstName: candidate.firstName,
+    lastName: candidate.lastName,
+    emailAddress: candidate.emailAddress,
+    themePreference:
+      candidate.themePreference === 'light' || candidate.themePreference === 'dark'
+        ? candidate.themePreference
+        : 'light',
+  };
 }

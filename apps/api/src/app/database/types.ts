@@ -4,6 +4,7 @@ export interface Database {
   user: UserTable;
   garden: GardenTable;
   plant: PlantTable;
+  plantLibrary: PlantLibraryTable;
 }
 
 export interface UserTable {
@@ -12,6 +13,7 @@ export interface UserTable {
   lastName: string | null;
   emailAddress: string;
   passwordHash: string | null;
+  themePreference: ColumnType<'light' | 'dark', 'light' | 'dark' | undefined, 'light' | 'dark'>;
   createdAt: ColumnType<Date, string | undefined, never>;
   updatedAt: ColumnType<Date, string | undefined, never>;
 }
@@ -37,6 +39,7 @@ export type GardenUpdate = Updateable<GardenTable>;
 
 export interface PlantTable {
   plantId: Generated<number>;
+  plantLibraryId: ColumnType<number | null, number | null | undefined, number | null>;
   plantName: string;
   species: string;
   plantType: 'vegetable' | 'fruit' | 'flower';
@@ -51,3 +54,27 @@ export interface PlantTable {
 export type Plant = Selectable<PlantTable>;
 export type NewPlant = Insertable<PlantTable>;
 export type PlantUpdate = Updateable<PlantTable>;
+
+export interface PlantLibraryTable {
+  plantLibraryId: Generated<number>;
+  commonName: string;
+  botanicalName: string | null;
+  plantCategory: 'vegetable' | 'fruit' | 'herb' | 'flower';
+  waterNeed: 'low' | 'moderate' | 'high';
+  waterNotes: string;
+  sunNeed: 'full_sun' | 'partial_sun' | 'partial_shade';
+  sunNotes: string;
+  nutritionNeed: 'low' | 'moderate' | 'high';
+  nutritionNotes: string;
+  plantingNotes: string;
+  spacingCm: number | null;
+  daysToMaturity: number | null;
+  source: 'system' | 'user';
+  ownerUserId: number | null;
+  createdAt: ColumnType<Date, string | undefined, never>;
+  updatedAt: ColumnType<Date, string | undefined, never>;
+}
+
+export type PlantLibrary = Selectable<PlantLibraryTable>;
+export type NewPlantLibrary = Insertable<PlantLibraryTable>;
+export type PlantLibraryUpdate = Updateable<PlantLibraryTable>;

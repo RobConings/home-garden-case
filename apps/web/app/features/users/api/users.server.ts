@@ -19,9 +19,10 @@ export type ResetPasswordPayload = {
 
 export type UserResponse = {
   userId: number;
-  firstName: string;
-  lastName: string;
+  firstName: string | null;
+  lastName: string | null;
   emailAddress: string;
+  themePreference: 'light' | 'dark';
   createdAt: string;
   updatedAt: string;
 };
@@ -43,6 +44,16 @@ export async function loginUser(payload: LoginUserPayload) {
 export async function resetPassword(payload: ResetPasswordPayload) {
   return await apiRequest<UserResponse>('/auth/reset-password', {
     method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function updateUserTheme(
+  userId: number,
+  payload: { themePreference: 'light' | 'dark' },
+) {
+  return await apiRequest<UserResponse>(`/users/${userId}/theme`, {
+    method: 'PUT',
     body: JSON.stringify(payload),
   });
 }

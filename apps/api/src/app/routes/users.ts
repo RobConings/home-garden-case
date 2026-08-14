@@ -10,6 +10,7 @@ import { emptyResponseSchema } from '../schemas/general.schema';
 import {
   createUserSchema,
   emailParamsSchema,
+  updateUserThemeSchema,
   updateUserSchema,
   userIdParamsSchema,
   userResponseSchema,
@@ -117,6 +118,35 @@ export default async function (fastify: FastifyInstance) {
       const body = createUserSchema.parse(request.body);
       const user = await userService.createUser(body);
       return reply.status(201).send(user);
+    },
+  );
+
+  /**
+   * PUT /users/:userId/theme
+   * Update a user's theme preference
+   */
+  fastify.put<{
+    Params: z.infer<typeof userIdParamsSchema>;
+    Body: z.infer<typeof updateUserThemeSchema>;
+  }>(
+    '/users/:userId/theme',
+    {
+      schema: {
+        description: "Update a user's theme preference",
+        tags: ['users'],
+        params: userIdParamsSchema,
+        body: updateUserThemeSchema,
+        response: {
+          200: userResponseSchema,
+          400: validationErrorResponseSchema,
+          404: notFoundErrorResponseSchema,
+          500: internalServerErrorResponseSchema,
+        },
+      },
+    },
+    async (request, reply) => {
+      const user = await userService.updateUserTheme(request.params.userId, request.body);
+      return reply.send(user);
     },
   );
 

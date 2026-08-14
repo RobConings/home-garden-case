@@ -6,6 +6,7 @@ import {
   createUserSchema,
   loginUserSchema,
   resetPasswordSchema,
+  updateUserThemeSchema,
   updateUserSchema,
 } from '../schemas/user.schema';
 import { ConflictError, NotFoundError, UnauthorizedError } from '../shared/errors';
@@ -17,6 +18,7 @@ const passwordKeyLength = 64;
 type CreateUserInput = z.infer<typeof createUserSchema>;
 type LoginUserInput = z.infer<typeof loginUserSchema>;
 type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
+type UpdateUserThemeInput = z.infer<typeof updateUserThemeSchema>;
 type UpdateUserInput = z.infer<typeof updateUserSchema>;
 
 export type PublicUser = Omit<User, 'passwordHash'>;
@@ -161,6 +163,17 @@ export class UserService {
     return toPublicUser(user);
   }
 
+  async updateUserTheme(userId: number, data: UpdateUserThemeInput): Promise<PublicUser> {
+    const existingUser = await this.userRepository.findById(userId);
+    if (!existingUser) {
+      throw new NotFoundError(`User with ID ${userId} not found`);
+    }
+
+    const validatedData = updateUserThemeSchema.parse(data);
+    const user = await this.userRepository.update(userId, validatedData);
+    return toPublicUser(user);
+  }
+
   /**
    * Delete a user
    * @throws Error if user not found
@@ -184,6 +197,7 @@ function toPublicUser(user: User): PublicUser {
     firstName: user.firstName,
     lastName: user.lastName,
     emailAddress: user.emailAddress,
+    themePreference: user.themePreference,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
   };

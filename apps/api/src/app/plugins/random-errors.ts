@@ -6,8 +6,9 @@ import fp from 'fastify-plugin';
  * Useful for testing error handling and retry logic.
  */
 export default fp(async function (fastify: FastifyInstance) {
-  const enabled = true;
-  const errorRate = 10;
+  const enabled = process.env.RANDOM_ERRORS_ENABLED === 'true';
+  const configuredErrorRate = Number(process.env.RANDOM_ERRORS_RATE ?? 10);
+  const errorRate = Number.isFinite(configuredErrorRate) ? configuredErrorRate : 10;
   const rate = Math.max(0, Math.min(100, errorRate));
   const statusCode = 500;
 

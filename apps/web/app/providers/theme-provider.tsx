@@ -1,4 +1,12 @@
-import { createContext, type ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import {
+  createContext,
+  type ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import type { RootlyThemeMode } from '@/lib/theme';
 
 const themeStorageKey = 'rootly-theme';
@@ -15,7 +23,11 @@ function isThemeMode(value: string | null): value is RootlyThemeMode {
   return value === 'light' || value === 'dark';
 }
 
-function getPreferredTheme(): RootlyThemeMode {
+function getPreferredTheme(initialMode?: RootlyThemeMode | null): RootlyThemeMode {
+  if (initialMode) {
+    return initialMode;
+  }
+
   if (typeof window === 'undefined') {
     return 'light';
   }
@@ -47,14 +59,20 @@ function applyTheme(mode: RootlyThemeMode) {
   }
 }
 
-export function ThemeProvider({ children }: { children: ReactNode }) {
+export function ThemeProvider({
+  children,
+  initialMode,
+}: {
+  children: ReactNode;
+  initialMode?: RootlyThemeMode | null;
+}) {
   const [mode, setThemeMode] = useState<RootlyThemeMode>('light');
 
   useEffect(() => {
-    const initialMode = getPreferredTheme();
-    setThemeMode(initialMode);
-    applyTheme(initialMode);
-  }, []);
+    const preferredMode = getPreferredTheme(initialMode);
+    setThemeMode(preferredMode);
+    applyTheme(preferredMode);
+  }, [initialMode]);
 
   const setMode = useCallback((nextMode: RootlyThemeMode) => {
     setThemeMode(nextMode);
