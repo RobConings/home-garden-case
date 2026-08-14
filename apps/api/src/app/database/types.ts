@@ -10,8 +10,8 @@ export interface UserTable {
   userId: Generated<number>;
   firstName: string | null;
   lastName: string | null;
-  age: number | null;
   emailAddress: string;
+  passwordHash: string | null;
   createdAt: ColumnType<Date, string | undefined, never>;
   updatedAt: ColumnType<Date, string | undefined, never>;
 }

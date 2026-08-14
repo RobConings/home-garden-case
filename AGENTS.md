@@ -13,11 +13,11 @@
 # CI Error Guidelines
 
 If the user wants help with fixing an error in their CI pipeline, use the following flow:
+
 - Retrieve the list of current CI Pipeline Executions (CIPEs) using the `nx_cloud_cipe_details` tool
 - If there are any errors, use the `nx_cloud_fix_cipe_failure` tool to retrieve the logs for a specific task
 - Use the task logs to see what's wrong and help the user fix their problem. Use the appropriate tools if necessary
 - Make sure that the problem is fixed by running the task that you passed into the `nx_cloud_fix_cipe_failure` tool
-
 
 <!-- nx configuration end-->
 
@@ -32,3 +32,4 @@ If the user wants help with fixing an error in their CI pipeline, use the follow
 - Do not place new components directly in a generic `components` root.
 - Put Storybook stories in `apps/web/stories`, mirroring the component architecture and filenames. Do not place `.stories.tsx` files inside `apps/web/app/components`.
 - Storybook stories must use mock data instead of live backend calls.
+- Do not add frontend copy that describes implementation status, dev/demo behavior, API plumbing, or future feature availability. Keep user-facing copy product-focused.

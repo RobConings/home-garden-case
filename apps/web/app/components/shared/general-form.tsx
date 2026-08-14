@@ -1,10 +1,11 @@
-import type { FormHTMLAttributes, ReactNode } from 'react';
+import type { ElementType, FormHTMLAttributes, ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 
 export type GeneralFormProps = FormHTMLAttributes<HTMLFormElement> & {
   title?: string;
   description?: string;
   footer?: ReactNode;
+  as?: ElementType;
 };
 
 export function GeneralForm({
@@ -12,11 +13,12 @@ export function GeneralForm({
   title,
   description,
   footer,
+  as: Comp = 'form',
   children,
   ...props
 }: GeneralFormProps) {
   return (
-    <form
+    <Comp
       className={cn(
         'rounded-lg border border-[var(--rootly-border)] bg-[var(--rootly-surface)] shadow-sm',
         className,
@@ -41,6 +43,6 @@ export function GeneralForm({
           {footer}
         </div>
       ) : null}
-    </form>
+    </Comp>
   );
 }

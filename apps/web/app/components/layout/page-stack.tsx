@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 const pageStackVariants = cva('flex flex-col', {
   variants: {
     gap: {
+      none: 'gap-0',
       sm: 'gap-4',
       md: 'gap-6',
       lg: 'gap-8',

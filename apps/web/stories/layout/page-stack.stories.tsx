@@ -10,7 +10,7 @@ const meta = {
   argTypes: {
     gap: {
       control: 'inline-radio',
-      options: ['sm', 'md', 'lg'],
+      options: ['none', 'sm', 'md', 'lg'],
     },
   },
 } satisfies Meta<typeof PageStack>;

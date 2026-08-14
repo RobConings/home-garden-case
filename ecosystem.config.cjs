@@ -29,6 +29,7 @@ module.exports = {
       max_memory_restart: '256M',
       env: {
         NODE_ENV: 'production',
+        API_BASE_URL: 'http://127.0.0.1:3000',
         PORT: '3001',
       },
     },
