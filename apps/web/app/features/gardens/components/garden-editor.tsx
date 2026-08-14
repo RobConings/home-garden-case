@@ -1609,23 +1609,6 @@ function isPointInPolygon(point: GardenPoint, polygon: GardenPoint[]) {
   return isInside;
 }
 
-function getPolygonBounds(points: GardenPoint[]) {
-  return points.reduce(
-    (bounds, point) => ({
-      minX: Math.min(bounds.minX, point.x),
-      maxX: Math.max(bounds.maxX, point.x),
-      minY: Math.min(bounds.minY, point.y),
-      maxY: Math.max(bounds.maxY, point.y),
-    }),
-    {
-      minX: Number.POSITIVE_INFINITY,
-      maxX: Number.NEGATIVE_INFINITY,
-      minY: Number.POSITIVE_INFINITY,
-      maxY: Number.NEGATIVE_INFINITY,
-    },
-  );
-}
-
 function getSegmentIntersection(
   firstStart: { x: number; y: number },
   firstEnd: { x: number; y: number },

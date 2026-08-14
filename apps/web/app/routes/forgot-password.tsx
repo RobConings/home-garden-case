@@ -157,17 +157,17 @@ export default function ForgotPassword() {
     }
 
     if (actionData.successMessage) {
-      messages.success(actionData.successMessage);
+      messages.showSuccess(actionData.successMessage);
       return;
     }
 
     if (actionData.errors.form) {
-      messages.error(actionData.errors.form);
+      messages.showError(actionData.errors.form);
       return;
     }
 
     if (Object.keys(actionData.errors).length > 0) {
-      messages.error('Please check the highlighted password reset fields.');
+      messages.showError('Please check the highlighted password reset fields.');
     }
   }, [actionData, messages]);
 

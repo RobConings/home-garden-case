@@ -87,11 +87,13 @@ export async function action({ request }: ActionFunctionArgs) {
     return json<RegisterActionData>({
       errors: {},
       values: {
-        firstName: user.firstName,
-        lastName: user.lastName,
+        firstName: user.firstName ?? parsed.data.firstName,
+        lastName: user.lastName ?? parsed.data.lastName,
         emailAddress: user.emailAddress,
       },
-      successMessage: `Account created for ${user.firstName} ${user.lastName}.`,
+      successMessage: `Account created for ${user.firstName ?? parsed.data.firstName} ${
+        user.lastName ?? parsed.data.lastName
+      }.`,
       messageId: createMessageId(),
     });
   } catch (error) {
@@ -144,17 +146,17 @@ export default function Register() {
     }
 
     if (actionData.successMessage) {
-      messages.success(actionData.successMessage);
+      messages.showSuccess(actionData.successMessage);
       return;
     }
 
     if (actionData.errors.form) {
-      messages.error(actionData.errors.form);
+      messages.showError(actionData.errors.form);
       return;
     }
 
     if (Object.keys(actionData.errors).length > 0) {
-      messages.error('Please check the highlighted registration fields.');
+      messages.showError('Please check the highlighted registration fields.');
     }
   }, [actionData, messages]);
 

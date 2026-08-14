@@ -25,7 +25,7 @@ const preview: Preview = {
 
       return (
         <div data-theme={isDark ? 'dark' : 'light'} className={isDark ? 'dark' : ''}>
-          <AppProviders>
+          <AppProviders user={null}>
             <Story />
           </AppProviders>
         </div>

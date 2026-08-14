@@ -12,17 +12,19 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const WithDescription: Story = {
-  render: () => (
-    <Field id="surface" label="Total surface area" description="Measured in square meters.">
-      <Input id="surface" type="number" placeholder="24" />
-    </Field>
-  ),
+  args: {
+    id: 'surface',
+    label: 'Total surface area',
+    description: 'Measured in square meters.',
+    children: <Input id="surface" type="number" placeholder="24" />,
+  },
 };
 
 export const WithError: Story = {
-  render: () => (
-    <Field id="surface-error" label="Total surface area" error="Surface area must be greater than 0.">
-      <Input id="surface-error" type="number" defaultValue={0} />
-    </Field>
-  ),
+  args: {
+    id: 'surface-error',
+    label: 'Total surface area',
+    error: 'Surface area must be greater than 0.',
+    children: <Input id="surface-error" type="number" defaultValue={0} />,
+  },
 };

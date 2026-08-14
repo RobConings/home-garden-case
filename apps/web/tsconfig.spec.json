@@ -2,6 +2,7 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "./out-tsc/vitest",
+    "lib": ["DOM", "DOM.Iterable", "ES2019"],
     "types": ["vitest/globals", "vitest/importMeta", "vite/client", "node", "vitest"],
     "jsx": "react-jsx",
     "module": "esnext",
@@ -10,6 +11,7 @@
   "include": [
     "vite.config.ts",
     "vitest.config.ts",
+    "test-setup.ts",
     "app/**/*.ts",
     "app/**/*.tsx",
     "app/**/*.js",

@@ -123,12 +123,12 @@ export default function Login() {
     }
 
     if (actionData.errors.form) {
-      messages.error(actionData.errors.form);
+      messages.showError(actionData.errors.form);
       return;
     }
 
     if (Object.keys(actionData.errors).length > 0) {
-      messages.error('Please check the highlighted login fields.');
+      messages.showError('Please check the highlighted login fields.');
     }
   }, [actionData, messages]);
 

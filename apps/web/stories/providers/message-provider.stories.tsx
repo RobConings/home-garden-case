@@ -9,24 +9,14 @@ function MessageProviderDemo() {
     <div className="flex flex-wrap gap-3">
       <Button
         type="button"
-        onClick={() =>
-          messages.success({
-            title: 'Garden saved',
-            description: 'Your planting plan is ready for the next step.',
-          })
-        }
+        onClick={() => messages.showSuccess('Garden saved. Your planting plan is ready.')}
       >
         Success toast
       </Button>
       <Button
         type="button"
         variant="danger"
-        onClick={() =>
-          messages.error({
-            title: 'Could not save garden',
-            description: 'Check the required fields and try again.',
-          })
-        }
+        onClick={() => messages.showError('Could not save garden. Check the required fields.')}
       >
         Error toast
       </Button>

@@ -2,6 +2,7 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "out-tsc/storybook",
+    "lib": ["DOM", "DOM.Iterable", "ES2019"],
     "module": "esnext",
     "moduleResolution": "bundler",
     "jsx": "preserve"
