@@ -12,6 +12,14 @@ export const plantLibraryOwnerQuerySchema = z.object({
 
 z.globalRegistry.add(plantLibraryOwnerQuerySchema, { id: 'PlantLibraryOwnerQuery' });
 
+export const plantLibraryPageQuerySchema = plantLibraryOwnerQuerySchema.extend({
+  search: z.string().trim().optional(),
+  limit: z.coerce.number().int().min(1).max(50).default(12),
+  offset: z.coerce.number().int().min(0).default(0),
+});
+
+z.globalRegistry.add(plantLibraryPageQuerySchema, { id: 'PlantLibraryPageQuery' });
+
 export const plantLibraryOwnerRequiredQuerySchema = z.object({
   ownerUserId: z.coerce.number().int().positive('User ID must be a positive integer'),
 });
@@ -41,12 +49,12 @@ export const createPlantLibrarySchema = z.object({
   botanicalName: z.string().trim().nullable().optional(),
   plantCategory: plantCategorySchema,
   waterNeed: waterNeedSchema,
-  waterNotes: z.string().min(1, 'Water notes are required').trim(),
+  waterNotes: z.string().trim().nullable().optional(),
   sunNeed: sunNeedSchema,
-  sunNotes: z.string().min(1, 'Sun notes are required').trim(),
+  sunNotes: z.string().trim().nullable().optional(),
   nutritionNeed: nutritionNeedSchema,
-  nutritionNotes: z.string().min(1, 'Nutrition notes are required').trim(),
-  plantingNotes: z.string().min(1, 'Planting notes are required').trim(),
+  nutritionNotes: z.string().trim().nullable().optional(),
+  plantingNotes: z.string().trim().nullable().optional(),
   spacingCm: z.number().positive('Spacing must be positive').nullable().optional(),
   daysToMaturity: z
     .number()
@@ -88,3 +96,13 @@ z.globalRegistry.add(plantLibraryResponseSchema, { id: 'PlantLibrary' });
 export const plantLibraryListResponseSchema = z.array(plantLibraryResponseSchema);
 
 z.globalRegistry.add(plantLibraryListResponseSchema, { id: 'PlantLibraryList' });
+
+export const plantLibraryPageResponseSchema = z.object({
+  items: plantLibraryListResponseSchema,
+  total: z.number(),
+  limit: z.number(),
+  offset: z.number(),
+  hasMore: z.boolean(),
+});
+
+z.globalRegistry.add(plantLibraryPageResponseSchema, { id: 'PlantLibraryPage' });

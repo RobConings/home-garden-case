@@ -13,6 +13,8 @@ import {
   plantLibraryListResponseSchema,
   plantLibraryOwnerQuerySchema,
   plantLibraryOwnerRequiredQuerySchema,
+  plantLibraryPageQuerySchema,
+  plantLibraryPageResponseSchema,
   plantLibraryResponseSchema,
   updatePlantLibrarySchema,
 } from '../schemas/plant-library.schema';
@@ -44,6 +46,35 @@ export default async function (fastify: FastifyInstance) {
     async (request, reply) => {
       const plants = await plantLibraryService.getVisiblePlants(request.query.ownerUserId);
       return reply.send(plants);
+    },
+  );
+
+  /**
+   * GET /plant-library/page
+   * Get a paged searchable plant template list
+   */
+  fastify.withTypeProvider<ZodTypeProvider>().get<{
+    Querystring: z.infer<typeof plantLibraryPageQuerySchema>;
+  }>(
+    '/plant-library/page',
+    {
+      schema: {
+        description: 'Get a paged searchable plant template list',
+        tags: ['plant-library'],
+        querystring: plantLibraryPageQuerySchema,
+        response: {
+          200: plantLibraryPageResponseSchema,
+          500: internalServerErrorResponseSchema,
+        },
+      },
+    },
+    async (request, reply) => {
+      const page = await plantLibraryService.getVisiblePlantPage(request.query.ownerUserId, {
+        search: request.query.search,
+        limit: request.query.limit,
+        offset: request.query.offset,
+      });
+      return reply.send(page);
     },
   );
 

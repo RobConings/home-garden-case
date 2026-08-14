@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Grid2X2, List, Search } from 'lucide-react';
 import { PageGrid, PageRow } from '@/components/layout';
@@ -29,6 +29,11 @@ export type GeneralListProps<TItem> = {
   columns: GeneralListColumn<TItem>[];
   emptyState?: ReactNode;
   searchPlaceholder?: string;
+  searchValue?: string;
+  onSearchChange?: (query: string) => void;
+  hasMore?: boolean;
+  isLoading?: boolean;
+  onLoadMore?: () => void;
   className?: string;
 };
 
@@ -40,18 +45,63 @@ export function GeneralList<TItem>({
   columns,
   emptyState,
   searchPlaceholder = 'Search',
+  searchValue,
+  onSearchChange,
+  hasMore = false,
+  isLoading = false,
+  onLoadMore,
   className,
 }: GeneralListProps<TItem>) {
-  const [query, setQuery] = useState('');
+  const [localQuery, setLocalQuery] = useState('');
   const [view, setView] = useState<'cards' | 'list'>('cards');
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const query = searchValue ?? localQuery;
   const normalizedQuery = query.trim().toLowerCase();
+  const usesServerSearch = Boolean(onSearchChange);
   const filteredItems = useMemo(() => {
+    if (usesServerSearch) {
+      return items;
+    }
+
     if (!normalizedQuery) {
       return items;
     }
 
     return items.filter((item) => getSearchText(item).toLowerCase().includes(normalizedQuery));
-  }, [getSearchText, items, normalizedQuery]);
+  }, [getSearchText, items, normalizedQuery, usesServerSearch]);
+
+  useEffect(() => {
+    if (!hasMore || isLoading || !onLoadMore) {
+      return;
+    }
+
+    const marker = loadMoreRef.current;
+    if (!marker) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          onLoadMore();
+        }
+      },
+      { rootMargin: '240px' },
+    );
+
+    observer.observe(marker);
+
+    return () => observer.disconnect();
+  }, [hasMore, isLoading, onLoadMore]);
+
+  function handleSearchChange(nextQuery: string) {
+    if (onSearchChange) {
+      onSearchChange(nextQuery);
+      return;
+    }
+
+    setLocalQuery(nextQuery);
+  }
 
   return (
     <div className={cn('grid gap-4', className)}>
@@ -63,7 +113,7 @@ export function GeneralList<TItem>({
           />
           <Input
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={(event) => handleSearchChange(event.target.value)}
             placeholder={searchPlaceholder}
             className="pl-9"
           />
@@ -90,37 +140,70 @@ export function GeneralList<TItem>({
         </div>
       </PageRow>
 
-      {filteredItems.length === 0 ? (
+      {filteredItems.length === 0 && !isLoading ? (
         emptyState ?? null
-      ) : view === 'cards' ? (
-        <PageGrid columns={3} gap="sm">
-          {filteredItems.map((item) => (
-            <div key={getKey(item)}>{renderCard(item)}</div>
-          ))}
-        </PageGrid>
       ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              {columns.map((column) => (
-                <TableHead key={column.key} className={column.className}>
-                  {column.label}
-                </TableHead>
+        <>
+          {view === 'cards' ? (
+            <PageGrid columns={3} gap="sm">
+              {filteredItems.map((item) => (
+                <div key={getKey(item)}>{renderCard(item)}</div>
               ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredItems.map((item) => (
-              <TableRow key={getKey(item)}>
-                {columns.map((column) => (
-                  <TableCell key={column.key} className={column.className}>
-                    {column.render(item)}
-                  </TableCell>
+            </PageGrid>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  {columns.map((column) => (
+                    <TableHead key={column.key} className={column.className}>
+                      {column.label}
+                    </TableHead>
+                  ))}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredItems.map((item) => (
+                  <TableRow key={getKey(item)}>
+                    {columns.map((column) => (
+                      <TableCell key={column.key} className={column.className}>
+                        {column.render(item)}
+                      </TableCell>
+                    ))}
+                  </TableRow>
                 ))}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+              </TableBody>
+            </Table>
+          )}
+
+          {onLoadMore ? <div ref={loadMoreRef} aria-hidden="true" className="h-1" /> : null}
+
+          {isLoading ? (
+            view === 'cards' ? (
+              <PageGrid columns={3} gap="sm">
+                {Array.from({ length: 3 }).map((_, index) => (
+                  <div
+                    key={index}
+                    className="h-40 animate-pulse rounded-md border border-[var(--rootly-border)] bg-[var(--rootly-surface)]"
+                  />
+                ))}
+              </PageGrid>
+            ) : (
+              <Table>
+                <TableBody>
+                  {Array.from({ length: 3 }).map((_, rowIndex) => (
+                    <TableRow key={rowIndex}>
+                      {columns.map((column) => (
+                        <TableCell key={column.key} className={column.className}>
+                          <div className="h-4 animate-pulse rounded bg-[var(--rootly-border)]" />
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )
+          ) : null}
+        </>
       )}
     </div>
   );

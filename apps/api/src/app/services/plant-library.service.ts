@@ -11,6 +11,12 @@ import type { z } from 'zod/v4';
 type CreatePlantLibraryInput = z.infer<typeof createPlantLibrarySchema>;
 type UpdatePlantLibraryInput = z.infer<typeof updatePlantLibrarySchema>;
 
+type PlantLibraryPageOptions = {
+  search?: string;
+  limit: number;
+  offset: number;
+};
+
 export class PlantLibraryService {
   private readonly plantLibraryRepository: PlantLibraryRepository;
   private readonly userRepository: UserRepository;
@@ -29,6 +35,28 @@ export class PlantLibraryService {
     }
 
     return await this.plantLibraryRepository.findVisibleToUser(ownerUserId);
+  }
+
+  async getVisiblePlantPage(ownerUserId: number | undefined, options: PlantLibraryPageOptions) {
+    if (ownerUserId) {
+      await this.ensureUserExists(ownerUserId);
+    }
+
+    const plants = await this.plantLibraryRepository.findVisibleToUser(ownerUserId);
+    const searchTerms = getSearchTerms(options.search);
+    const filteredPlants = searchTerms.length
+      ? plants.filter((plant) => matchesPlantSearch(plant, searchTerms))
+      : plants;
+    const total = filteredPlants.length;
+    const items = filteredPlants.slice(options.offset, options.offset + options.limit);
+
+    return {
+      items,
+      total,
+      limit: options.limit,
+      offset: options.offset,
+      hasMore: options.offset + items.length < total,
+    };
   }
 
   async getPlantById(plantLibraryId: number): Promise<PlantLibrary> {
@@ -64,6 +92,10 @@ export class PlantLibraryService {
     return await this.plantLibraryRepository.create({
       ...validatedData,
       botanicalName: validatedData.botanicalName ?? null,
+      waterNotes: validatedData.waterNotes ?? '',
+      sunNotes: validatedData.sunNotes ?? '',
+      nutritionNotes: validatedData.nutritionNotes ?? '',
+      plantingNotes: validatedData.plantingNotes ?? '',
       spacingCm: validatedData.spacingCm ?? null,
       daysToMaturity: validatedData.daysToMaturity ?? null,
       source: 'user',
@@ -83,6 +115,10 @@ export class PlantLibraryService {
     return await this.plantLibraryRepository.update(existingPlant.plantLibraryId, {
       ...validatedData,
       botanicalName: validatedData.botanicalName ?? null,
+      waterNotes: validatedData.waterNotes ?? '',
+      sunNotes: validatedData.sunNotes ?? '',
+      nutritionNotes: validatedData.nutritionNotes ?? '',
+      plantingNotes: validatedData.plantingNotes ?? '',
       spacingCm: validatedData.spacingCm ?? null,
       daysToMaturity: validatedData.daysToMaturity ?? null,
     });
@@ -114,4 +150,82 @@ export class PlantLibraryService {
 
     return plant;
   }
+}
+
+function getSearchTerms(search?: string) {
+  return (search ?? '')
+    .trim()
+    .toLowerCase()
+    .split(/\s+/)
+    .filter(Boolean);
+}
+
+function matchesPlantSearch(plant: PlantLibrary, searchTerms: string[]) {
+  if (!matchesCarePairing(plant, searchTerms)) {
+    return false;
+  }
+
+  const searchableText = [
+    plant.commonName,
+    plant.botanicalName,
+    plant.plantCategory,
+    plant.waterNeed,
+    `${plant.waterNeed} water`,
+    `water ${plant.waterNeed}`,
+    plant.waterNotes,
+    plant.sunNeed,
+    formatSearchValue(plant.sunNeed),
+    `${formatSearchValue(plant.sunNeed)} sun`,
+    `sun ${formatSearchValue(plant.sunNeed)}`,
+    plant.sunNotes,
+    plant.nutritionNeed,
+    `${plant.nutritionNeed} nutrition`,
+    `nutrition ${plant.nutritionNeed}`,
+    plant.nutritionNotes,
+    plant.plantingNotes,
+    plant.source,
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+
+  return searchTerms.every((term) => searchableText.includes(term));
+}
+
+function matchesCarePairing(plant: PlantLibrary, searchTerms: string[]) {
+  const needTerm = searchTerms.find(
+    (term) => term === 'low' || term === 'moderate' || term === 'high',
+  );
+
+  if (needTerm && searchTerms.includes('water') && plant.waterNeed !== needTerm) {
+    return false;
+  }
+
+  if (needTerm && searchTerms.includes('nutrition') && plant.nutritionNeed !== needTerm) {
+    return false;
+  }
+
+  if (searchTerms.includes('sun')) {
+    if (searchTerms.includes('full') && plant.sunNeed !== 'full_sun') {
+      return false;
+    }
+
+    if (searchTerms.includes('shade') && plant.sunNeed !== 'partial_shade') {
+      return false;
+    }
+
+    if (
+      searchTerms.includes('partial') &&
+      !searchTerms.includes('shade') &&
+      plant.sunNeed !== 'partial_sun'
+    ) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function formatSearchValue(value: string) {
+  return value.replace(/_/g, ' ');
 }

@@ -1,6 +1,14 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from '@remix-run/node';
 import { json, redirect } from '@remix-run/node';
-import { Form, Link, useActionData, useLoaderData, useNavigation } from '@remix-run/react';
+import {
+  Form,
+  Link,
+  useActionData,
+  useFetcher,
+  useLoaderData,
+  useNavigation,
+} from '@remix-run/react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pencil, Trash2 } from 'lucide-react';
 import { PageContainer, PageRow, PageStack } from '@/components/layout';
 import { EmptyState, GeneralList, PageTitle } from '@/components/shared';
@@ -10,8 +18,10 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import {
   createPlantLibraryEntry,
   deletePlantLibraryEntry,
-  getPlantLibrary,
+  getPlantLibraryEntry,
+  getPlantLibraryPage,
   type PlantLibraryEntry,
+  type PlantLibraryPage,
   updatePlantLibraryEntry,
 } from '@/features/plants/api';
 import { PlantLibraryForm } from '@/features/plants/components';
@@ -21,6 +31,12 @@ import { requireUser } from '@/lib/session.server';
 type ActionData = {
   error?: string;
 };
+
+type PlantLibraryResourceData = PlantLibraryPage & {
+  search: string;
+};
+
+const plantPageSize = 12;
 
 export const meta: MetaFunction = () => [
   { title: 'Plants | Rootly' },
@@ -32,15 +48,19 @@ export const meta: MetaFunction = () => [
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const user = await requireUser(request);
-  const plants = await getPlantLibrary(user.userId);
+  const plantPage = await getPlantLibraryPage(user.userId, {
+    limit: plantPageSize,
+    offset: 0,
+  });
   const url = new URL(request.url);
   const isCreating = url.searchParams.get('new') === '1';
-  const editId = Number(url.searchParams.get('edit'));
+  const editParam = url.searchParams.get('edit');
+  const editId = editParam ? Number(editParam) : Number.NaN;
   const editPlant = Number.isFinite(editId)
-    ? plants.find((plant) => plant.plantLibraryId === editId && plant.source === 'user') ?? null
+    ? await getEditablePlant(user.userId, editId)
     : null;
 
-  return { user, plants, editPlant, isCreating };
+  return { user, plantPage, editPlant, isCreating };
 }
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -91,11 +111,73 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function DashboardPlants() {
-  const { plants, editPlant, isCreating } = useLoaderData<typeof loader>();
+  const { plantPage, editPlant, isCreating } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
+  const plantFetcher = useFetcher<PlantLibraryResourceData>();
+  const initialSearchSkipped = useRef(false);
+  const [query, setQuery] = useState('');
+  const [plants, setPlants] = useState(plantPage.items);
+  const [hasMore, setHasMore] = useState(plantPage.hasMore);
   const isSubmitting = navigation.state === 'submitting';
+  const isLoadingPlants = plantFetcher.state !== 'idle';
   const showForm = isCreating || Boolean(editPlant);
+
+  useEffect(() => {
+    setPlants(plantPage.items);
+    setHasMore(plantPage.hasMore);
+  }, [plantPage.hasMore, plantPage.items]);
+
+  useEffect(() => {
+    const plantPageData = plantFetcher.data;
+    if (!plantPageData) {
+      return;
+    }
+
+    if (plantPageData.search !== query.trim()) {
+      return;
+    }
+
+    setHasMore(plantPageData.hasMore);
+    setPlants((currentPlants) => {
+      if (plantPageData.offset === 0) {
+        return plantPageData.items;
+      }
+
+      const currentPlantIds = new Set(currentPlants.map((plant) => plant.plantLibraryId));
+      const newPlants = plantPageData.items.filter(
+        (plant) => !currentPlantIds.has(plant.plantLibraryId),
+      );
+
+      return [...currentPlants, ...newPlants];
+    });
+  }, [plantFetcher.data, query]);
+
+  useEffect(() => {
+    if (!initialSearchSkipped.current) {
+      initialSearchSkipped.current = true;
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      plantFetcher.load(createPlantResourceUrl({ search: query, offset: 0 }));
+    }, 250);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [query]);
+
+  const handlePlantSearchChange = useCallback((nextQuery: string) => {
+    setQuery(nextQuery);
+    setHasMore(false);
+  }, []);
+
+  const loadMorePlants = useCallback(() => {
+    if (isLoadingPlants || !hasMore) {
+      return;
+    }
+
+    plantFetcher.load(createPlantResourceUrl({ search: query, offset: plants.length }));
+  }, [hasMore, isLoadingPlants, plantFetcher, plants.length, query]);
 
   return (
     <PageContainer minHeight="content" className="py-8">
@@ -141,17 +223,28 @@ export default function DashboardPlants() {
               plant.botanicalName,
               plant.plantCategory,
               plant.waterNeed,
+              `${plant.waterNeed} water`,
+              `water ${plant.waterNeed}`,
               plant.sunNeed,
+              `${formatSun(plant.sunNeed)} sun`,
+              `sun ${formatSun(plant.sunNeed)}`,
               plant.nutritionNeed,
+              `${plant.nutritionNeed} nutrition`,
+              `nutrition ${plant.nutritionNeed}`,
             ]
               .filter(Boolean)
               .join(' ')
           }
           searchPlaceholder="Search plants"
+          searchValue={query}
+          onSearchChange={handlePlantSearchChange}
+          hasMore={hasMore}
+          isLoading={isLoadingPlants}
+          onLoadMore={loadMorePlants}
           emptyState={
             <EmptyState
               title="No plants found"
-              description="Try a different search or add a custom plant."
+              description="Try a different search or add a new plant."
             />
           }
           renderCard={(plant) => <PlantCard plant={plant} />}
@@ -195,7 +288,7 @@ export default function DashboardPlants() {
             },
             {
               key: 'actions',
-              label: '',
+              label: 'Actions',
               className: 'w-32 text-right',
               render: (plant) => <PlantActions plant={plant} />,
             },
@@ -227,15 +320,18 @@ function PlantCard({ plant }: { plant: PlantLibraryEntry }) {
       <CardContent className="grid gap-3 text-sm text-[var(--rootly-text-muted)]">
         <p>
           <span className="font-medium text-[var(--rootly-text)]">Water:</span>{' '}
-          {formatNeed(plant.waterNeed)}. {plant.waterNotes}
+          {formatNeed(plant.waterNeed)}
+          {plant.waterNotes ? `. ${plant.waterNotes}` : ''}
         </p>
         <p>
           <span className="font-medium text-[var(--rootly-text)]">Sun:</span>{' '}
-          {formatSun(plant.sunNeed)}. {plant.sunNotes}
+          {formatSun(plant.sunNeed)}
+          {plant.sunNotes ? `. ${plant.sunNotes}` : ''}
         </p>
         <p>
           <span className="font-medium text-[var(--rootly-text)]">Nutrition:</span>{' '}
-          {formatNeed(plant.nutritionNeed)}. {plant.nutritionNotes}
+          {formatNeed(plant.nutritionNeed)}
+          {plant.nutritionNotes ? `. ${plant.nutritionNotes}` : ''}
         </p>
       </CardContent>
       {plant.source === 'user' ? (
@@ -301,6 +397,29 @@ function optionalString(value: FormDataEntryValue | null) {
 function optionalNumber(value: FormDataEntryValue | null) {
   const text = String(value || '').trim();
   return text ? Number(text) : null;
+}
+
+async function getEditablePlant(userId: number, plantLibraryId: number) {
+  try {
+    const plant = await getPlantLibraryEntry(plantLibraryId, userId);
+    return plant.source === 'user' ? plant : null;
+  } catch {
+    return null;
+  }
+}
+
+function createPlantResourceUrl({ search, offset }: { search: string; offset: number }) {
+  const params = new URLSearchParams({
+    limit: String(plantPageSize),
+    offset: String(offset),
+  });
+  const trimmedSearch = search.trim();
+
+  if (trimmedSearch) {
+    params.set('search', trimmedSearch);
+  }
+
+  return `/resources/plant-library?${params.toString()}`;
 }
 
 function formatNeed(value: string) {

@@ -24,17 +24,31 @@ export type PlantLibraryEntry = {
   updatedAt: string;
 };
 
+export type PlantLibraryPage = {
+  items: PlantLibraryEntry[];
+  total: number;
+  limit: number;
+  offset: number;
+  hasMore: boolean;
+};
+
+export type PlantLibraryPageOptions = {
+  search?: string;
+  limit?: number;
+  offset?: number;
+};
+
 export type CreatePlantLibraryEntryPayload = {
   commonName: string;
   botanicalName?: string | null;
   plantCategory: PlantCategory;
   waterNeed: PlantNeed;
-  waterNotes: string;
+  waterNotes?: string | null;
   sunNeed: SunNeed;
-  sunNotes: string;
+  sunNotes?: string | null;
   nutritionNeed: PlantNeed;
-  nutritionNotes: string;
-  plantingNotes: string;
+  nutritionNotes?: string | null;
+  plantingNotes?: string | null;
   spacingCm?: number | null;
   daysToMaturity?: number | null;
   ownerUserId: number;
@@ -49,6 +63,33 @@ export async function getPlantLibrary(ownerUserId?: number) {
   const query = ownerUserId ? `?ownerUserId=${ownerUserId}` : '';
 
   return await apiRequest<PlantLibraryEntry[]>(`/plant-library${query}`);
+}
+
+export async function getPlantLibraryPage(
+  ownerUserId: number | undefined,
+  options: PlantLibraryPageOptions = {},
+) {
+  const params = new URLSearchParams();
+
+  if (ownerUserId) {
+    params.set('ownerUserId', String(ownerUserId));
+  }
+
+  if (options.search) {
+    params.set('search', options.search);
+  }
+
+  if (options.limit) {
+    params.set('limit', String(options.limit));
+  }
+
+  if (typeof options.offset === 'number') {
+    params.set('offset', String(options.offset));
+  }
+
+  const query = params.toString();
+
+  return await apiRequest<PlantLibraryPage>(`/plant-library/page${query ? `?${query}` : ''}`);
 }
 
 export async function getPlantLibraryEntry(plantLibraryId: number, ownerUserId?: number) {
