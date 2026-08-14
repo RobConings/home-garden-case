@@ -3,6 +3,7 @@ import { Field, GeneralForm } from '@/components/shared';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PasswordInput } from '@/components/ui/password-input';
+import { textLimits } from '@/lib/plain-text';
 
 export type RegisterFormErrors = Partial<
   Record<'firstName' | 'lastName' | 'emailAddress' | 'password' | 'form', string>
@@ -56,6 +57,7 @@ export function RegisterForm({
             name="firstName"
             autoComplete="given-name"
             defaultValue={values?.firstName}
+            maxLength={textLimits.personName}
             required
           />
         </Field>
@@ -65,6 +67,7 @@ export function RegisterForm({
             name="lastName"
             autoComplete="family-name"
             defaultValue={values?.lastName}
+            maxLength={textLimits.personName}
             required
           />
         </Field>
@@ -76,6 +79,7 @@ export function RegisterForm({
           type="email"
           autoComplete="email"
           defaultValue={values?.emailAddress}
+          maxLength={textLimits.email}
           required
         />
       </Field>
@@ -85,6 +89,7 @@ export function RegisterForm({
           name="password"
           autoComplete="new-password"
           minLength={8}
+          maxLength={textLimits.password}
           required
         />
       </Field>

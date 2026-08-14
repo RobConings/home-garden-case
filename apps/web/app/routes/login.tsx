@@ -11,15 +11,21 @@ import { loginUser } from '@/features/users/api/users.server';
 import { LoginForm, type LoginFormErrors } from '@/features/users/components';
 import { ApiClientError } from '@/lib/api.server';
 import { createUserSession, getCurrentUser } from '@/lib/session.server';
+import { textLimits } from '@/lib/plain-text';
 import { useMessages, useRouteMessages } from '@/providers';
 
 const loginFormSchema = z.object({
   emailAddress: z
+    .string()
+    .trim()
+    .toLowerCase()
     .email('Enter a valid email address')
     .min(1, 'Email is required')
-    .trim()
-    .toLowerCase(),
-  password: z.string().min(1, 'Password is required'),
+    .max(textLimits.email, `Email must be ${textLimits.email} characters or fewer`),
+  password: z
+    .string()
+    .min(1, 'Password is required')
+    .max(textLimits.password, `Password must be ${textLimits.password} characters or fewer`),
 });
 
 type LoginActionData = {

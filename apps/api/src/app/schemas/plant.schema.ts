@@ -1,4 +1,5 @@
 import { z } from 'zod/v4';
+import { requiredPlainTextSchema, textLimits } from '../shared/plain-text';
 
 export const plantIdParamsSchema = z.object({
   plantId: z.coerce.number().int().positive('Plant ID must be a positive integer'),
@@ -13,8 +14,8 @@ export const createPlantSchema = z.object({
     .positive('Plant library ID must be a positive integer')
     .nullable()
     .optional(),
-  plantName: z.string().min(1, 'Plant name is required').trim(),
-  species: z.string().min(1, 'Species is required').trim(),
+  plantName: requiredPlainTextSchema('Plant name', textLimits.name),
+  species: requiredPlainTextSchema('Species', textLimits.shortText),
   plantType: z.enum(['vegetable', 'fruit', 'flower'], {
     message: 'Plant type must be vegetable, fruit, or flower',
   }),

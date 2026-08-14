@@ -5,6 +5,11 @@ import {
   hasPasswordDigit,
   hasPasswordSpecialCharacter,
 } from '../shared/password';
+import {
+  nullablePlainTextResponseSchema,
+  requiredPlainTextSchema,
+  textLimits,
+} from '../shared/plain-text';
 
 export const userIdParamsSchema = z.object({
   userId: z.coerce.number().int().positive('User ID must be a positive integer'),
@@ -14,24 +19,29 @@ z.globalRegistry.add(userIdParamsSchema, { id: 'UserId' });
 
 export const emailParamsSchema = z.object({
   emailAddress: z
-    .email('Invalid email address format')
-    .min(1, 'Email address is required')
+    .string()
     .trim()
-    .toLowerCase(),
+    .toLowerCase()
+    .min(1, 'Email address is required')
+    .max(textLimits.email, `Email address must be ${textLimits.email} characters or fewer`)
+    .email('Invalid email address format'),
 });
 
 z.globalRegistry.add(emailParamsSchema, { id: 'Email' });
 
 export const createUserSchema = z.object({
-  firstName: z.string().trim().min(1, 'First name is required'),
-  lastName: z.string().trim().min(1, 'Last name is required'),
+  firstName: requiredPlainTextSchema('First name', textLimits.personName),
+  lastName: requiredPlainTextSchema('Last name', textLimits.personName),
   emailAddress: z
-    .email('Invalid email address format')
-    .min(1, 'Email address is required')
+    .string()
     .trim()
-    .toLowerCase(),
+    .toLowerCase()
+    .min(1, 'Email address is required')
+    .max(textLimits.email, `Email address must be ${textLimits.email} characters or fewer`)
+    .email('Invalid email address format'),
   password: z
     .string()
+    .max(textLimits.password, `Password must be ${textLimits.password} characters or fewer`)
     .refine(hasMinimumPasswordLength, 'Password must include at least 8 characters')
     .refine(hasPasswordCapital, 'Password must include a capital letter')
     .refine(hasPasswordDigit, 'Password must include a digit')
@@ -42,23 +52,31 @@ z.globalRegistry.add(createUserSchema, { id: 'CreateUser' });
 
 export const loginUserSchema = z.object({
   emailAddress: z
-    .email('Invalid email address format')
-    .min(1, 'Email address is required')
+    .string()
     .trim()
-    .toLowerCase(),
-  password: z.string().min(1, 'Password is required'),
+    .toLowerCase()
+    .min(1, 'Email address is required')
+    .max(textLimits.email, `Email address must be ${textLimits.email} characters or fewer`)
+    .email('Invalid email address format'),
+  password: z
+    .string()
+    .min(1, 'Password is required')
+    .max(textLimits.password, `Password must be ${textLimits.password} characters or fewer`),
 });
 
 z.globalRegistry.add(loginUserSchema, { id: 'LoginUser' });
 
 export const resetPasswordSchema = z.object({
   emailAddress: z
-    .email('Invalid email address format')
-    .min(1, 'Email address is required')
+    .string()
     .trim()
-    .toLowerCase(),
+    .toLowerCase()
+    .min(1, 'Email address is required')
+    .max(textLimits.email, `Email address must be ${textLimits.email} characters or fewer`)
+    .email('Invalid email address format'),
   password: z
     .string()
+    .max(textLimits.password, `Password must be ${textLimits.password} characters or fewer`)
     .refine(hasMinimumPasswordLength, 'Password must include at least 8 characters')
     .refine(hasPasswordCapital, 'Password must include a capital letter')
     .refine(hasPasswordDigit, 'Password must include a digit')
@@ -87,9 +105,12 @@ z.globalRegistry.add(updateUserThemeSchema, { id: 'UpdateUserTheme' });
 
 export const userResponseSchema = z.object({
   userId: z.number(),
-  firstName: z.string().nullable(),
-  lastName: z.string().nullable(),
-  emailAddress: z.email(),
+  firstName: nullablePlainTextResponseSchema(textLimits.personName),
+  lastName: nullablePlainTextResponseSchema(textLimits.personName),
+  emailAddress: z
+    .string()
+    .max(textLimits.email, `Email address must be ${textLimits.email} characters or fewer`)
+    .email(),
   themePreference: themePreferenceSchema,
   createdAt: z.coerce.string(),
   updatedAt: z.coerce.string(),

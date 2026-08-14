@@ -12,6 +12,12 @@ import {
 } from '@/features/plants/api';
 import { PlantLibraryForm } from '@/features/plants/components';
 import { ApiClientError } from '@/lib/api.server';
+import {
+  optionalPlainText,
+  PlainTextValidationError,
+  requirePlainText,
+  textLimits,
+} from '@/lib/plain-text';
 import { requireUser } from '@/lib/session.server';
 import { useMessages } from '@/providers/message-provider';
 
@@ -66,10 +72,18 @@ export async function action({ params, request }: ActionFunctionArgs) {
 
     return redirect('/dashboard/plants?toast=plant-updated');
   } catch (error) {
-    const status = error instanceof ApiClientError ? error.status : 503;
+    const status =
+      error instanceof ApiClientError
+        ? error.status
+        : error instanceof PlainTextValidationError
+          ? 400
+          : 503;
     return json<ActionData>(
       {
-        message: 'We could not save this plant right now. Please check the details and try again.',
+        message:
+          error instanceof PlainTextValidationError
+            ? error.message
+            : 'We could not save this plant right now. Please check the details and try again.',
       },
       { status },
     );
@@ -111,28 +125,35 @@ export default function DashboardPlantsEdit() {
 
 function readPlantPayload(formData: FormData) {
   return {
-    commonName: sanitizeText(formData.get('commonName')),
-    botanicalName: optionalString(formData.get('botanicalName')),
+    commonName: requirePlainText(formData.get('commonName'), 'Plant name', textLimits.name),
+    botanicalName: optionalPlainText(
+      formData.get('botanicalName'),
+      'Botanical name',
+      textLimits.shortText,
+    ),
     plantCategory: String(
       formData.get('plantCategory') || 'vegetable',
     ) as PlantLibraryEntry['plantCategory'],
     waterNeed: String(formData.get('waterNeed') || 'moderate') as PlantLibraryEntry['waterNeed'],
-    waterNotes: optionalString(formData.get('waterNotes')),
+    waterNotes: optionalPlainText(formData.get('waterNotes'), 'Water notes', textLimits.notes),
     sunNeed: String(formData.get('sunNeed') || 'full_sun') as PlantLibraryEntry['sunNeed'],
-    sunNotes: optionalString(formData.get('sunNotes')),
+    sunNotes: optionalPlainText(formData.get('sunNotes'), 'Sun notes', textLimits.notes),
     nutritionNeed: String(
       formData.get('nutritionNeed') || 'moderate',
     ) as PlantLibraryEntry['nutritionNeed'],
-    nutritionNotes: optionalString(formData.get('nutritionNotes')),
-    plantingNotes: optionalString(formData.get('plantingNotes')),
+    nutritionNotes: optionalPlainText(
+      formData.get('nutritionNotes'),
+      'Nutrition notes',
+      textLimits.notes,
+    ),
+    plantingNotes: optionalPlainText(
+      formData.get('plantingNotes'),
+      'Planting notes',
+      textLimits.notes,
+    ),
     spacingCm: optionalNumber(formData.get('spacingCm')),
     daysToMaturity: optionalNumber(formData.get('daysToMaturity')),
   };
-}
-
-function optionalString(value: FormDataEntryValue | null) {
-  const text = sanitizeText(value);
-  return text ? text : null;
 }
 
 function optionalNumber(value: FormDataEntryValue | null) {
@@ -143,8 +164,4 @@ function optionalNumber(value: FormDataEntryValue | null) {
 
   const number = Number(text);
   return Number.isFinite(number) ? number : null;
-}
-
-function sanitizeText(value: FormDataEntryValue | null) {
-  return String(value || '').trim();
 }

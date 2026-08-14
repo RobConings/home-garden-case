@@ -1,4 +1,5 @@
 import { apiRequest } from '@/lib/api.server';
+import { textLimits, toSafeDisplayText } from '@/lib/plain-text';
 
 export type SunDirection = 'north' | 'east' | 'south' | 'west';
 
@@ -29,29 +30,43 @@ export type CreateGardenPayload = {
 export type UpdateGardenPayload = CreateGardenPayload;
 
 export async function getGardens() {
-  return await apiRequest<Garden[]>('/gardens');
+  const gardens = await apiRequest<Garden[]>('/gardens');
+  return gardens.map(normalizeGarden);
 }
 
 export async function getGarden(gardenId: number) {
-  return await apiRequest<Garden>(`/gardens/${gardenId}`);
+  const garden = await apiRequest<Garden>(`/gardens/${gardenId}`);
+  return normalizeGarden(garden);
 }
 
 export async function createGarden(payload: CreateGardenPayload) {
-  return await apiRequest<Garden>('/gardens', {
+  const garden = await apiRequest<Garden>('/gardens', {
     method: 'POST',
     body: JSON.stringify(payload),
   });
+  return normalizeGarden(garden);
 }
 
 export async function updateGarden(gardenId: number, payload: UpdateGardenPayload) {
-  return await apiRequest<Garden>(`/gardens/${gardenId}`, {
+  const garden = await apiRequest<Garden>(`/gardens/${gardenId}`, {
     method: 'PUT',
     body: JSON.stringify(payload),
   });
+  return normalizeGarden(garden);
 }
 
 export async function deleteGarden(gardenId: number) {
   return await apiRequest<void>(`/gardens/${gardenId}`, {
     method: 'DELETE',
   });
+}
+
+function normalizeGarden(garden: Garden): Garden {
+  return {
+    ...garden,
+    gardenName: toSafeDisplayText(garden.gardenName, textLimits.name),
+    locationDescription: garden.locationDescription
+      ? toSafeDisplayText(garden.locationDescription, textLimits.description)
+      : null,
+  };
 }

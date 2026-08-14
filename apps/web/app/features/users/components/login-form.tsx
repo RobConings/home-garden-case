@@ -3,6 +3,7 @@ import { Field, GeneralForm } from '@/components/shared';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PasswordInput } from '@/components/ui/password-input';
+import { textLimits } from '@/lib/plain-text';
 
 export type LoginFormErrors = Partial<Record<'emailAddress' | 'password' | 'form', string>>;
 
@@ -54,6 +55,7 @@ export function LoginForm({
           type="email"
           autoComplete="email"
           defaultValue={values?.emailAddress}
+          maxLength={textLimits.email}
           required
         />
       </Field>
@@ -62,6 +64,7 @@ export function LoginForm({
           id="password"
           name="password"
           autoComplete="current-password"
+          maxLength={textLimits.password}
           showRequirements={false}
           required
         />

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import type { Garden } from '@/features/gardens/api';
+import { textLimits } from '@/lib/plain-text';
 
 type GardenFormProps = {
   garden?: Garden;
@@ -41,6 +42,7 @@ export function GardenForm({
             id="gardenName"
             name="gardenName"
             defaultValue={garden?.gardenName}
+            maxLength={textLimits.name}
             placeholder="Home garden"
             required
           />

@@ -3,6 +3,7 @@ import { Field, GeneralForm } from '@/components/shared';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PasswordInput } from '@/components/ui/password-input';
+import { textLimits } from '@/lib/plain-text';
 
 export type ResetPasswordFormErrors = Partial<
   Record<'emailAddress' | 'password' | 'confirmPassword' | 'form', string>
@@ -61,6 +62,7 @@ export function ResetPasswordForm({
           type="email"
           autoComplete="email"
           defaultValue={values?.emailAddress}
+          maxLength={textLimits.email}
           required
         />
       </Field>
@@ -70,6 +72,7 @@ export function ResetPasswordForm({
           name="password"
           autoComplete="new-password"
           minLength={8}
+          maxLength={textLimits.password}
           required
         />
       </Field>
@@ -79,6 +82,7 @@ export function ResetPasswordForm({
           name="confirmPassword"
           autoComplete="new-password"
           minLength={8}
+          maxLength={textLimits.password}
           showRequirements={false}
           required
         />

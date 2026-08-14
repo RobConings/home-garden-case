@@ -1,4 +1,12 @@
 import { z } from 'zod/v4';
+import {
+  optionalPlainTextSchema,
+  nullablePlainTextResponseSchema,
+  plainTextResponseSchema,
+  requiredPlainTextSchema,
+  sanitizePlainText,
+  textLimits,
+} from '../shared/plain-text';
 
 export const plantLibraryIdParamsSchema = z.object({
   plantLibraryId: z.coerce.number().int().positive('Plant library ID must be a positive integer'),
@@ -13,7 +21,13 @@ export const plantLibraryOwnerQuerySchema = z.object({
 z.globalRegistry.add(plantLibraryOwnerQuerySchema, { id: 'PlantLibraryOwnerQuery' });
 
 export const plantLibraryPageQuerySchema = plantLibraryOwnerQuerySchema.extend({
-  search: z.string().trim().optional(),
+  search: z.preprocess(
+    (value) => sanitizePlainText(value) || undefined,
+    z
+      .string()
+      .max(textLimits.search, `Search must be ${textLimits.search} characters or fewer`)
+      .optional(),
+  ),
   limit: z.coerce.number().int().min(1).max(50).default(12),
   offset: z.coerce.number().int().min(0).default(0),
 });
@@ -45,16 +59,16 @@ export const nutritionNeedSchema = z.enum(['low', 'moderate', 'high'], {
 });
 
 export const createPlantLibrarySchema = z.object({
-  commonName: z.string().min(1, 'Common name is required').trim(),
-  botanicalName: z.string().trim().nullable().optional(),
+  commonName: requiredPlainTextSchema('Common name', textLimits.name),
+  botanicalName: optionalPlainTextSchema('Botanical name', textLimits.shortText),
   plantCategory: plantCategorySchema,
   waterNeed: waterNeedSchema,
-  waterNotes: z.string().trim().nullable().optional(),
+  waterNotes: optionalPlainTextSchema('Water notes', textLimits.notes),
   sunNeed: sunNeedSchema,
-  sunNotes: z.string().trim().nullable().optional(),
+  sunNotes: optionalPlainTextSchema('Sun notes', textLimits.notes),
   nutritionNeed: nutritionNeedSchema,
-  nutritionNotes: z.string().trim().nullable().optional(),
-  plantingNotes: z.string().trim().nullable().optional(),
+  nutritionNotes: optionalPlainTextSchema('Nutrition notes', textLimits.notes),
+  plantingNotes: optionalPlainTextSchema('Planting notes', textLimits.notes),
   spacingCm: z.number().positive('Spacing must be positive').nullable().optional(),
   daysToMaturity: z
     .number()
@@ -73,16 +87,16 @@ z.globalRegistry.add(updatePlantLibrarySchema, { id: 'UpdatePlantLibrary' });
 
 export const plantLibraryResponseSchema = z.object({
   plantLibraryId: z.number(),
-  commonName: z.string(),
-  botanicalName: z.string().nullable(),
+  commonName: plainTextResponseSchema(textLimits.name),
+  botanicalName: nullablePlainTextResponseSchema(textLimits.shortText),
   plantCategory: plantCategorySchema,
   waterNeed: waterNeedSchema,
-  waterNotes: z.string(),
+  waterNotes: plainTextResponseSchema(textLimits.notes),
   sunNeed: sunNeedSchema,
-  sunNotes: z.string(),
+  sunNotes: plainTextResponseSchema(textLimits.notes),
   nutritionNeed: nutritionNeedSchema,
-  nutritionNotes: z.string(),
-  plantingNotes: z.string(),
+  nutritionNotes: plainTextResponseSchema(textLimits.notes),
+  plantingNotes: plainTextResponseSchema(textLimits.notes),
   spacingCm: z.number().nullable(),
   daysToMaturity: z.number().nullable(),
   source: z.enum(['system', 'user']),

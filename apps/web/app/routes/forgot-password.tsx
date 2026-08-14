@@ -18,23 +18,30 @@ import {
   isStrongPassword,
 } from '@/lib/password';
 import { getCurrentUser } from '@/lib/session.server';
+import { textLimits } from '@/lib/plain-text';
 import { useMessages } from '@/providers';
 
 const resetPasswordFormSchema = z
   .object({
     emailAddress: z
+      .string()
+      .trim()
+      .toLowerCase()
       .email('Enter a valid email address')
       .min(1, 'Email is required')
-      .trim()
-      .toLowerCase(),
+      .max(textLimits.email, `Email must be ${textLimits.email} characters or fewer`),
     password: z
       .string()
+      .max(textLimits.password, `Password must be ${textLimits.password} characters or fewer`)
       .refine(hasMinimumPasswordLength, 'Password must include at least 8 characters')
       .refine(hasPasswordCapital, 'Password must include a capital letter')
       .refine(hasPasswordDigit, 'Password must include a digit')
       .refine(hasPasswordSpecialCharacter, 'Password must include a special character')
       .refine(isStrongPassword, 'Password must meet all password requirements'),
-    confirmPassword: z.string().min(1, 'Confirm your new password'),
+    confirmPassword: z
+      .string()
+      .min(1, 'Confirm your new password')
+      .max(textLimits.password, `Password must be ${textLimits.password} characters or fewer`),
   })
   .refine((values) => values.password === values.confirmPassword, {
     message: 'Passwords must match',

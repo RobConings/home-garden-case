@@ -17,18 +17,37 @@ import {
   hasPasswordSpecialCharacter,
   isStrongPassword,
 } from '@/lib/password';
+import { sanitizePlainText, textLimits } from '@/lib/plain-text';
 import { useMessages } from '@/providers';
 
 const registerFormSchema = z.object({
-  firstName: z.string().trim().min(1, 'First name is required'),
-  lastName: z.string().trim().min(1, 'Last name is required'),
+  firstName: z.preprocess(
+    sanitizePlainText,
+    z
+      .string()
+      .min(1, 'First name is required')
+      .max(
+        textLimits.personName,
+        `First name must be ${textLimits.personName} characters or fewer`,
+      ),
+  ),
+  lastName: z.preprocess(
+    sanitizePlainText,
+    z
+      .string()
+      .min(1, 'Last name is required')
+      .max(textLimits.personName, `Last name must be ${textLimits.personName} characters or fewer`),
+  ),
   emailAddress: z
+    .string()
+    .trim()
+    .toLowerCase()
     .email('Enter a valid email address')
     .min(1, 'Email is required')
-    .trim()
-    .toLowerCase(),
+    .max(textLimits.email, `Email must be ${textLimits.email} characters or fewer`),
   password: z
     .string()
+    .max(textLimits.password, `Password must be ${textLimits.password} characters or fewer`)
     .refine(hasMinimumPasswordLength, 'Password must include at least 8 characters')
     .refine(hasPasswordCapital, 'Password must include a capital letter')
     .refine(hasPasswordDigit, 'Password must include a digit')

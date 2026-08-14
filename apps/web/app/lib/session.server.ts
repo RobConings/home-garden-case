@@ -1,5 +1,6 @@
 import { createCookieSessionStorage, redirect } from '@remix-run/node';
 import type { UserResponse } from '@/features/users/api/users.server';
+import { textLimits, toSafeDisplayText } from './plain-text';
 
 const sessionSecret = process.env.SESSION_SECRET || 'rootly-development-session-secret';
 const sessionCookieSecure = process.env.SESSION_COOKIE_SECURE === 'true';
@@ -98,9 +99,13 @@ function normalizeUserSession(value: unknown): UserSession | null {
 
   return {
     userId: candidate.userId,
-    firstName: candidate.firstName,
-    lastName: candidate.lastName,
-    emailAddress: candidate.emailAddress,
+    firstName: candidate.firstName
+      ? toSafeDisplayText(candidate.firstName, textLimits.personName)
+      : null,
+    lastName: candidate.lastName
+      ? toSafeDisplayText(candidate.lastName, textLimits.personName)
+      : null,
+    emailAddress: toSafeDisplayText(candidate.emailAddress, textLimits.email),
     themePreference:
       candidate.themePreference === 'light' || candidate.themePreference === 'dark'
         ? candidate.themePreference

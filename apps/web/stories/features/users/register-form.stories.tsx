@@ -39,9 +39,3 @@ export const Submitting: Story = {
     isSubmitting: true,
   },
 };
-
-export const Success: Story = {
-  args: {
-    successMessage: 'Account created for Maya Green.',
-  },
-};

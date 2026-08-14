@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { textLimits } from '@/lib/plain-text';
 
 type PlantLibraryFormProps = {
   plant?: PlantLibraryEntry;
@@ -41,6 +42,7 @@ export function PlantLibraryForm({
             id="commonName"
             name="commonName"
             defaultValue={plant?.commonName}
+            maxLength={textLimits.name}
             placeholder="Cherry tomato"
             required
           />
@@ -50,6 +52,7 @@ export function PlantLibraryForm({
             id="botanicalName"
             name="botanicalName"
             defaultValue={plant?.botanicalName ?? ''}
+            maxLength={textLimits.shortText}
             placeholder="Solanum lycopersicum"
           />
         </Field>
@@ -121,6 +124,7 @@ export function PlantLibraryForm({
           id="waterNotes"
           name="waterNotes"
           defaultValue={plant?.waterNotes}
+          maxLength={textLimits.notes}
           placeholder="Keep soil evenly moist."
         />
       </Field>
@@ -129,6 +133,7 @@ export function PlantLibraryForm({
           id="sunNotes"
           name="sunNotes"
           defaultValue={plant?.sunNotes}
+          maxLength={textLimits.notes}
           placeholder="Needs at least 6 hours of direct sun."
         />
       </Field>
@@ -137,6 +142,7 @@ export function PlantLibraryForm({
           id="nutritionNotes"
           name="nutritionNotes"
           defaultValue={plant?.nutritionNotes}
+          maxLength={textLimits.notes}
           placeholder="Feed after flowering starts."
         />
       </Field>
@@ -145,6 +151,7 @@ export function PlantLibraryForm({
           id="plantingNotes"
           name="plantingNotes"
           defaultValue={plant?.plantingNotes}
+          maxLength={textLimits.notes}
           placeholder="Stake early and mulch after planting."
         />
       </Field>

@@ -4,6 +4,7 @@ import { Grid2X2, List, Search } from 'lucide-react';
 import { PageGrid, PageRow } from '@/components/layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { textLimits } from '@/lib/plain-text';
 import {
   Table,
   TableBody,
@@ -115,6 +116,7 @@ export function GeneralList<TItem>({
             value={query}
             onChange={(event) => handleSearchChange(event.target.value)}
             placeholder={searchPlaceholder}
+            maxLength={textLimits.search}
             className="pl-9"
           />
         </div>

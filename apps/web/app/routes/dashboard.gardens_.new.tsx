@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { createGarden, type Garden } from '@/features/gardens/api';
 import { GardenForm } from '@/features/gardens/components';
 import { ApiClientError } from '@/lib/api.server';
+import { PlainTextValidationError, requirePlainText, textLimits } from '@/lib/plain-text';
 import { requireUser } from '@/lib/session.server';
 import { useMessages } from '@/providers/message-provider';
 
@@ -33,13 +34,12 @@ export async function action({ request }: ActionFunctionArgs) {
     return redirect('/dashboard/gardens?toast=garden-created');
   } catch (error) {
     const status =
-      error instanceof ApiClientError ? error.status : error instanceof ValidationError ? 400 : 503;
+      error instanceof ApiClientError ? error.status : isValidationError(error) ? 400 : 503;
     return json<ActionData>(
       {
-        message:
-          error instanceof ValidationError
-            ? error.message
-            : 'We could not save this garden right now. Please check the details and try again.',
+        message: isValidationError(error)
+          ? error.message
+          : 'We could not save this garden right now. Please check the details and try again.',
       },
       { status },
     );
@@ -79,14 +79,10 @@ export default function DashboardGardensNew() {
 }
 
 function readGardenPayload(formData: FormData) {
-  const gardenName = sanitizeText(formData.get('gardenName'));
+  const gardenName = requirePlainText(formData.get('gardenName'), 'Garden name', textLimits.name);
   const totalWidth = requiredPositiveNumber(formData.get('totalWidth'));
   const totalHeight = requiredPositiveNumber(formData.get('totalHeight'));
   const gridSizeCm = requiredPositiveInteger(formData.get('gridSizeCm'));
-
-  if (!gardenName) {
-    throw new ValidationError('Garden name is required.');
-  }
 
   return {
     gardenName,
@@ -108,11 +104,11 @@ function requiredPositiveNumber(value: FormDataEntryValue | null) {
   return number;
 }
 
-function sanitizeText(value: FormDataEntryValue | null) {
-  return String(value || '').trim();
-}
-
 class ValidationError extends Error {}
+
+function isValidationError(error: unknown): error is ValidationError | PlainTextValidationError {
+  return error instanceof ValidationError || error instanceof PlainTextValidationError;
+}
 
 function requiredPositiveInteger(value: FormDataEntryValue | null) {
   const number = Number(String(value || '').trim());

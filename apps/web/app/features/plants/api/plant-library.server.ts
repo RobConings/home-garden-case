@@ -1,4 +1,5 @@
 import { apiRequest } from '@/lib/api.server';
+import { sanitizePlainText, textLimits, toSafeDisplayText } from '@/lib/plain-text';
 
 export type PlantCategory = 'vegetable' | 'fruit' | 'herb' | 'flower';
 export type PlantNeed = 'low' | 'moderate' | 'high';
@@ -58,8 +59,9 @@ export type UpdatePlantLibraryEntryPayload = Omit<CreatePlantLibraryEntryPayload
 
 export async function getPlantLibrary(ownerUserId?: number) {
   const query = ownerUserId ? `?ownerUserId=${ownerUserId}` : '';
+  const plants = await apiRequest<PlantLibraryEntry[]>(`/plant-library${query}`);
 
-  return await apiRequest<PlantLibraryEntry[]>(`/plant-library${query}`);
+  return plants.map(normalizePlantLibraryEntry);
 }
 
 export async function getPlantLibraryPage(
@@ -73,7 +75,7 @@ export async function getPlantLibraryPage(
   }
 
   if (options.search) {
-    params.set('search', options.search);
+    params.set('search', sanitizePlainText(options.search).slice(0, textLimits.search));
   }
 
   if (options.limit) {
@@ -86,20 +88,27 @@ export async function getPlantLibraryPage(
 
   const query = params.toString();
 
-  return await apiRequest<PlantLibraryPage>(`/plant-library/page${query ? `?${query}` : ''}`);
+  const page = await apiRequest<PlantLibraryPage>(`/plant-library/page${query ? `?${query}` : ''}`);
+
+  return {
+    ...page,
+    items: page.items.map(normalizePlantLibraryEntry),
+  };
 }
 
 export async function getPlantLibraryEntry(plantLibraryId: number, ownerUserId?: number) {
   const query = ownerUserId ? `?ownerUserId=${ownerUserId}` : '';
+  const plant = await apiRequest<PlantLibraryEntry>(`/plant-library/${plantLibraryId}${query}`);
 
-  return await apiRequest<PlantLibraryEntry>(`/plant-library/${plantLibraryId}${query}`);
+  return normalizePlantLibraryEntry(plant);
 }
 
 export async function createPlantLibraryEntry(payload: CreatePlantLibraryEntryPayload) {
-  return await apiRequest<PlantLibraryEntry>('/plant-library', {
+  const plant = await apiRequest<PlantLibraryEntry>('/plant-library', {
     method: 'POST',
     body: JSON.stringify(payload),
   });
+  return normalizePlantLibraryEntry(plant);
 }
 
 export async function updatePlantLibraryEntry(
@@ -107,17 +116,32 @@ export async function updatePlantLibraryEntry(
   ownerUserId: number,
   payload: UpdatePlantLibraryEntryPayload,
 ) {
-  return await apiRequest<PlantLibraryEntry>(
+  const plant = await apiRequest<PlantLibraryEntry>(
     `/plant-library/${plantLibraryId}?ownerUserId=${ownerUserId}`,
     {
       method: 'PUT',
       body: JSON.stringify(payload),
     },
   );
+  return normalizePlantLibraryEntry(plant);
 }
 
 export async function deletePlantLibraryEntry(plantLibraryId: number, ownerUserId: number) {
   return await apiRequest<void>(`/plant-library/${plantLibraryId}?ownerUserId=${ownerUserId}`, {
     method: 'DELETE',
   });
+}
+
+function normalizePlantLibraryEntry(plant: PlantLibraryEntry): PlantLibraryEntry {
+  return {
+    ...plant,
+    commonName: toSafeDisplayText(plant.commonName, textLimits.name),
+    botanicalName: plant.botanicalName
+      ? toSafeDisplayText(plant.botanicalName, textLimits.shortText)
+      : null,
+    waterNotes: toSafeDisplayText(plant.waterNotes, textLimits.notes),
+    sunNotes: toSafeDisplayText(plant.sunNotes, textLimits.notes),
+    nutritionNotes: toSafeDisplayText(plant.nutritionNotes, textLimits.notes),
+    plantingNotes: toSafeDisplayText(plant.plantingNotes, textLimits.notes),
+  };
 }

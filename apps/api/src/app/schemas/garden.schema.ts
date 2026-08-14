@@ -1,4 +1,11 @@
 import { z } from 'zod/v4';
+import {
+  optionalPlainTextSchema,
+  nullablePlainTextResponseSchema,
+  plainTextResponseSchema,
+  requiredPlainTextSchema,
+  textLimits,
+} from '../shared/plain-text';
 
 export const gardenIdParamsSchema = z.object({
   gardenId: z.coerce.number().int().positive('Garden ID must be a positive integer'),
@@ -25,11 +32,11 @@ const coordinateSchema = {
 
 export const createGardenSchema = z
   .object({
-    gardenName: z.string().min(1, 'Garden name is required').trim(),
+    gardenName: requiredPlainTextSchema('Garden name', textLimits.name),
     totalWidth: z.number().positive('Total width must be greater than zero'),
     totalHeight: z.number().positive('Total height must be greater than zero'),
     gridSizeCm: z.number().int().positive().default(25),
-    locationDescription: z.string().nullable().optional(),
+    locationDescription: optionalPlainTextSchema('Location description', textLimits.description),
     sunDirection: sunDirectionSchema,
     ...coordinateSchema,
   })
@@ -56,12 +63,12 @@ z.globalRegistry.add(updateGardenSchema, { id: 'UpdateGarden' });
 export type UpdateGardenPayload = z.infer<typeof updateGardenSchema>;
 
 export const gardenResponseSchema = z.object({
-  gardenName: z.string(),
+  gardenName: plainTextResponseSchema(textLimits.name),
   totalSurfaceArea: z.number().nonnegative(),
   totalWidth: z.number().nonnegative(),
   totalHeight: z.number().nonnegative(),
   gridSizeCm: z.number().int().positive(),
-  locationDescription: z.string().nullable(),
+  locationDescription: nullablePlainTextResponseSchema(textLimits.description),
   sunDirection: sunDirectionSchema,
   ...coordinateSchema,
   gardenId: z.number(),
