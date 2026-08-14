@@ -1,5 +1,6 @@
 import type { ElementType } from 'react';
 import type { PlantLibraryEntry } from '@/features/plants/api';
+import { PageGrid } from '@/components/layout';
 import { Field, GeneralForm } from '@/components/shared';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,7 +35,7 @@ export function PlantLibraryForm({
       <input type="hidden" name="intent" value={isEditing ? 'update' : 'create'} />
       {plant ? <input type="hidden" name="plantLibraryId" value={plant.plantLibraryId} /> : null}
 
-      <div className="grid gap-5 sm:grid-cols-2">
+      <PageGrid columns={2} gap="sm">
         <Field id="commonName" label="Name">
           <Input
             id="commonName"
@@ -52,9 +53,9 @@ export function PlantLibraryForm({
             placeholder="Solanum lycopersicum"
           />
         </Field>
-      </div>
+      </PageGrid>
 
-      <div className="grid gap-5 sm:grid-cols-3">
+      <PageGrid columns={3} gap="sm">
         <Field id="plantCategory" label="Type">
           <Select
             id="plantCategory"
@@ -81,9 +82,9 @@ export function PlantLibraryForm({
             <option value="partial_shade">Partial shade</option>
           </Select>
         </Field>
-      </div>
+      </PageGrid>
 
-      <div className="grid gap-5 sm:grid-cols-3">
+      <PageGrid columns={3} gap="sm">
         <Field id="nutritionNeed" label="Nutrition">
           <Select
             id="nutritionNeed"
@@ -113,7 +114,7 @@ export function PlantLibraryForm({
             defaultValue={plant?.daysToMaturity ?? ''}
           />
         </Field>
-      </div>
+      </PageGrid>
 
       <Field id="waterNotes" label="Water notes">
         <Textarea

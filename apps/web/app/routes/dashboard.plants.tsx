@@ -9,7 +9,7 @@ import {
   useNavigation,
 } from '@remix-run/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Pencil, Trash2 } from 'lucide-react';
+import { CheckCircle2, Pencil, Trash2, XCircle } from 'lucide-react';
 import { PageContainer, PageRow, PageStack } from '@/components/layout';
 import { EmptyState, GeneralList, PageTitle } from '@/components/shared';
 import { Badge } from '@/components/ui/badge';
@@ -29,7 +29,12 @@ import { ApiClientError } from '@/lib/api.server';
 import { requireUser } from '@/lib/session.server';
 
 type ActionData = {
-  error?: string;
+  toast?: ToastData;
+};
+
+type ToastData = {
+  type: 'success' | 'error';
+  message: string;
 };
 
 type PlantLibraryResourceData = PlantLibraryPage & {
@@ -56,11 +61,12 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const isCreating = url.searchParams.get('new') === '1';
   const editParam = url.searchParams.get('edit');
   const editId = editParam ? Number(editParam) : Number.NaN;
+  const toast = getToast(url.searchParams.get('toast'));
   const editPlant = Number.isFinite(editId)
     ? await getEditablePlant(user.userId, editId)
     : null;
 
-  return { user, plantPage, editPlant, isCreating };
+  return { user, plantPage, editPlant, isCreating, toast };
 }
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -73,7 +79,7 @@ export async function action({ request }: ActionFunctionArgs) {
       const plantLibraryId = Number(formData.get('plantLibraryId'));
       await deletePlantLibraryEntry(plantLibraryId, user.userId);
 
-      return redirect('/dashboard/plants');
+      return redirect('/dashboard/plants?toast=plant-deleted');
     }
 
     const payload = readPlantPayload(formData);
@@ -82,7 +88,7 @@ export async function action({ request }: ActionFunctionArgs) {
       const plantLibraryId = Number(formData.get('plantLibraryId'));
       await updatePlantLibraryEntry(plantLibraryId, user.userId, payload);
 
-      return redirect('/dashboard/plants');
+      return redirect('/dashboard/plants?toast=plant-updated');
     }
 
     await createPlantLibraryEntry({
@@ -90,28 +96,26 @@ export async function action({ request }: ActionFunctionArgs) {
       ownerUserId: user.userId,
     });
 
-    return redirect('/dashboard/plants');
+    return redirect('/dashboard/plants?toast=plant-created');
   } catch (error) {
-    if (error instanceof ApiClientError) {
-      return json<ActionData>(
-        {
-          error: error.status === 400 ? 'Check the plant details and try again.' : error.message,
-        },
-        { status: error.status },
-      );
-    }
-
+    const status = error instanceof ApiClientError ? error.status : 503;
     return json<ActionData>(
       {
-        error: 'We could not save this plant right now.',
+        toast: {
+          type: 'error',
+          message:
+            intent === 'delete'
+              ? 'We could not delete this plant right now. Please try again.'
+              : 'We could not save this plant right now. Please check the details and try again.',
+        },
       },
-      { status: 503 },
+      { status },
     );
   }
 }
 
 export default function DashboardPlants() {
-  const { plantPage, editPlant, isCreating } = useLoaderData<typeof loader>();
+  const { plantPage, editPlant, isCreating, toast } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
   const plantFetcher = useFetcher<PlantLibraryResourceData>();
@@ -122,6 +126,7 @@ export default function DashboardPlants() {
   const isSubmitting = navigation.state === 'submitting';
   const isLoadingPlants = plantFetcher.state !== 'idle';
   const showForm = isCreating || Boolean(editPlant);
+  const visibleToast = actionData?.toast ?? toast;
 
   useEffect(() => {
     setPlants(plantPage.items);
@@ -181,6 +186,7 @@ export default function DashboardPlants() {
 
   return (
     <PageContainer minHeight="content" className="py-8">
+      <ToastMessage toast={visibleToast} />
       <PageStack gap="lg">
         <PageTitle
           eyebrow="Plant library"
@@ -198,12 +204,6 @@ export default function DashboardPlants() {
             )
           }
         />
-
-        {actionData?.error ? (
-          <p className="rounded-md border border-[var(--rootly-danger)]/25 bg-[var(--rootly-danger-soft)] px-3 py-2 text-sm text-[var(--rootly-danger)]">
-            {actionData.error}
-          </p>
-        ) : null}
 
         {showForm ? (
           <PlantLibraryForm
@@ -276,15 +276,6 @@ export default function DashboardPlants() {
               key: 'nutrition',
               label: 'Nutrition',
               render: (plant) => formatNeed(plant.nutritionNeed),
-            },
-            {
-              key: 'source',
-              label: 'Source',
-              render: (plant) => (
-                <Badge variant={plant.source === 'system' ? 'neutral' : 'success'}>
-                  {plant.source === 'system' ? 'Seeded' : 'Custom'}
-                </Badge>
-              ),
             },
             {
               key: 'actions',
@@ -368,6 +359,58 @@ function PlantActions({ plant }: { plant: PlantLibraryEntry }) {
   );
 }
 
+function ToastMessage({ toast }: { toast?: ToastData | null }) {
+  const [isVisible, setIsVisible] = useState(Boolean(toast));
+
+  useEffect(() => {
+    setIsVisible(Boolean(toast));
+
+    if (!toast) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => setIsVisible(false), 5000);
+
+    return () => window.clearTimeout(timer);
+  }, [toast]);
+
+  useEffect(() => {
+    if (!toast || typeof window === 'undefined') {
+      return;
+    }
+
+    const url = new URL(window.location.href);
+
+    if (url.searchParams.has('toast')) {
+      url.searchParams.delete('toast');
+      window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
+    }
+  }, [toast]);
+
+  if (!toast || !isVisible) {
+    return null;
+  }
+
+  const isSuccess = toast.type === 'success';
+  const Icon = isSuccess ? CheckCircle2 : XCircle;
+
+  return (
+    <div
+      aria-live={isSuccess ? 'polite' : 'assertive'}
+      className={[
+        'fixed bottom-6 right-6 z-50 flex max-w-sm items-start gap-3 rounded-md border bg-[var(--rootly-surface)] px-4 py-3 text-sm shadow-lg',
+        isSuccess
+          ? 'border-[var(--rootly-success)]/30 text-[var(--rootly-success)]'
+          : 'border-[var(--rootly-danger)]/30 text-[var(--rootly-danger)]',
+      ].join(' ')}
+      role={isSuccess ? 'status' : 'alert'}
+    >
+      <Icon aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0" />
+      <p className="text-[var(--rootly-text)]">{toast.message}</p>
+    </div>
+  );
+}
+
 function readPlantPayload(formData: FormData) {
   return {
     commonName: String(formData.get('commonName') || ''),
@@ -431,4 +474,26 @@ function formatSun(value: string) {
     .split('_')
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(' ');
+}
+
+function getToast(value: string | null): ToastData | null {
+  switch (value) {
+    case 'plant-created':
+      return {
+        type: 'success',
+        message: 'Plant added to your library.',
+      };
+    case 'plant-updated':
+      return {
+        type: 'success',
+        message: 'Plant changes saved.',
+      };
+    case 'plant-deleted':
+      return {
+        type: 'success',
+        message: 'Plant removed from your library.',
+      };
+    default:
+      return null;
+  }
 }

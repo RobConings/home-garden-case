@@ -1,6 +1,11 @@
 import { GardenRepository } from '../database/repositories/garden.repository';
 import { Garden, GardenUpdate, NewGarden } from '../database/types';
-import { createGardenSchema, updateGardenSchema } from '../schemas/garden.schema';
+import {
+  createGardenSchema,
+  type CreateGardenPayload,
+  updateGardenSchema,
+  type UpdateGardenPayload,
+} from '../schemas/garden.schema';
 import { NotFoundError } from '../shared/errors';
 
 export class GardenService {
@@ -33,28 +38,34 @@ export class GardenService {
    * Create a new garden
    * @throws Error if validation fails
    */
-  async createGarden(data: NewGarden): Promise<Garden> {
-    // Validate with Zod schema
+  async createGarden(data: CreateGardenPayload): Promise<Garden> {
     const validatedData = createGardenSchema.parse(data);
+    const gardenData: NewGarden = {
+      ...validatedData,
+      totalSurfaceArea: calculateSurfaceArea(validatedData.totalWidth, validatedData.totalHeight),
+    };
 
-    return await this.gardenRepository.create(validatedData);
+    return await this.gardenRepository.create(gardenData);
   }
 
   /**
    * Update a garden
    * @throws Error if garden not found or validation fails
    */
-  async updateGarden(gardenId: number, data: GardenUpdate): Promise<Garden> {
+  async updateGarden(gardenId: number, data: UpdateGardenPayload): Promise<Garden> {
     // Verify garden exists
     const existingGarden = await this.gardenRepository.findById(gardenId);
     if (!existingGarden) {
       throw new NotFoundError(`Garden with ID ${gardenId} not found`);
     }
 
-    // Validate with Zod schema
     const validatedData = updateGardenSchema.parse(data);
+    const gardenData: GardenUpdate = {
+      ...validatedData,
+      totalSurfaceArea: calculateSurfaceArea(validatedData.totalWidth, validatedData.totalHeight),
+    };
 
-    return await this.gardenRepository.update(gardenId, validatedData);
+    return await this.gardenRepository.update(gardenId, gardenData);
   }
 
   /**
@@ -72,4 +83,8 @@ export class GardenService {
       throw new Error(`Failed to delete garden with ID ${gardenId}`);
     }
   }
+}
+
+function calculateSurfaceArea(totalWidth: number, totalHeight: number) {
+  return totalWidth * totalHeight;
 }

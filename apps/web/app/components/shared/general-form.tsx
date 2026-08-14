@@ -1,4 +1,5 @@
 import type { ElementType, FormHTMLAttributes, ReactNode } from 'react';
+import { PageRow, PageStack } from '@/components/layout';
 import { cn } from '@/lib/utils';
 
 export type GeneralFormProps = FormHTMLAttributes<HTMLFormElement> & {
@@ -37,11 +38,13 @@ export function GeneralForm({
           ) : null}
         </div>
       ) : null}
-      <div className="grid gap-5 p-5">{children}</div>
+      <PageStack gap="sm" className="p-5">
+        {children}
+      </PageStack>
       {footer ? (
-        <div className="flex items-center justify-end gap-2 border-t border-[var(--rootly-border)] p-5">
+        <PageRow align="end" gap="sm" className="border-t border-[var(--rootly-border)] p-5">
           {footer}
-        </div>
+        </PageRow>
       ) : null}
     </Comp>
   );

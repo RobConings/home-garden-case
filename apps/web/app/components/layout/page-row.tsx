@@ -12,7 +12,7 @@ const pageRowVariants = cva('flex flex-wrap', {
     align: {
       start: 'items-start',
       center: 'items-center',
-      end: 'items-end',
+      end: 'items-center justify-end',
       between: 'items-center justify-between',
     },
   },

@@ -8,11 +8,11 @@ import {
   useRef,
   useState,
 } from 'react';
-import { CheckCircle2, X, XCircle } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, type LucideIcon, X, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
-type MessageVariant = 'success' | 'error';
+type MessageVariant = 'success' | 'error' | 'warning';
 
 type ToastMessage = {
   id: number;
@@ -29,11 +29,39 @@ type AddMessageInput = {
 type MessageContextValue = {
   success: (message: AddMessageInput | string) => void;
   error: (message: AddMessageInput | string) => void;
+  warning: (message: AddMessageInput | string) => void;
   dismiss: (id: number) => void;
 };
 
 const toastDuration = 5000;
 const MessageContext = createContext<MessageContextValue | null>(null);
+const toastVariantStyles = {
+  success: {
+    Icon: CheckCircle2,
+    iconClassName: 'text-[var(--rootly-primary)]',
+    className:
+      'border-[var(--rootly-primary)]/40 bg-[var(--rootly-primary-soft)] text-[var(--rootly-text)]',
+  },
+  error: {
+    Icon: XCircle,
+    iconClassName: 'text-[var(--rootly-danger)]',
+    className:
+      'border-[var(--rootly-danger)]/40 bg-[var(--rootly-danger-soft)] text-[var(--rootly-text)]',
+  },
+  warning: {
+    Icon: AlertTriangle,
+    iconClassName: 'text-[var(--rootly-warning)]',
+    className:
+      'border-[var(--rootly-warning)]/40 bg-[var(--rootly-warning-soft)] text-[var(--rootly-text)]',
+  },
+} satisfies Record<
+  MessageVariant,
+  {
+    Icon: LucideIcon;
+    iconClassName: string;
+    className: string;
+  }
+>;
 
 export function MessageProvider({ children }: { children: ReactNode }) {
   const [messages, setMessages] = useState<ToastMessage[]>([]);
@@ -79,6 +107,7 @@ export function MessageProvider({ children }: { children: ReactNode }) {
     () => ({
       success: (message: AddMessageInput | string) => addMessage('success', message),
       error: (message: AddMessageInput | string) => addMessage('error', message),
+      warning: (message: AddMessageInput | string) => addMessage('warning', message),
       dismiss,
     }),
     [addMessage, dismiss],
@@ -137,26 +166,18 @@ function Toast({
   message: ToastMessage;
   onDismiss: (id: number) => void;
 }) {
-  const Icon = message.variant === 'success' ? CheckCircle2 : XCircle;
+  const variantStyles = toastVariantStyles[message.variant];
+  const Icon = variantStyles.Icon;
 
   return (
     <div
       role={message.variant === 'error' ? 'alert' : 'status'}
       className={cn(
-        'flex items-start gap-3 rounded-md border bg-[var(--rootly-surface)] p-4 text-[var(--rootly-text)] shadow-lg',
-        message.variant === 'success'
-          ? 'border-[var(--rootly-primary)]/35'
-          : 'border-[var(--rootly-danger)]/35',
+        'flex items-start gap-3 rounded-md border p-4 shadow-lg',
+        variantStyles.className,
       )}
     >
-      <Icon
-        className={cn(
-          'mt-0.5 h-5 w-5 shrink-0',
-          message.variant === 'success'
-            ? 'text-[var(--rootly-primary)]'
-            : 'text-[var(--rootly-danger)]',
-        )}
-      />
+      <Icon className={cn('mt-0.5 h-5 w-5 shrink-0', variantStyles.iconClassName)} />
       <div className="min-w-0 flex-1">
         <p className="text-sm font-semibold leading-5">{message.title}</p>
         {message.description ? (

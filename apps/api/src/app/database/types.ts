@@ -26,7 +26,10 @@ export interface GardenTable {
   gardenId: Generated<number>;
   gardenName: string;
   totalSurfaceArea: number; // in square meters
+  totalWidth: number; // in meters
+  totalHeight: number; // in meters
   locationDescription: string | null; // e.g., "Backyard", "Patio"
+  sunDirection: 'north' | 'east' | 'south' | 'west';
   latitude: number | null; // optional geographic coordinate
   longitude: number | null; // optional geographic coordinate
   createdAt: ColumnType<Date, string | undefined, never>;

@@ -6,23 +6,31 @@ export const gardenIdParamsSchema = z.object({
 
 z.globalRegistry.add(gardenIdParamsSchema, { id: 'GardenId' });
 
+const sunDirectionSchema = z.enum(['north', 'east', 'south', 'west']);
+
+const coordinateSchema = {
+  latitude: z
+    .number()
+    .min(-90, 'Latitude must be between -90 and 90')
+    .max(90, 'Latitude must be between -90 and 90')
+    .nullable()
+    .optional(),
+  longitude: z
+    .number()
+    .min(-180, 'Longitude must be between -180 and 180')
+    .max(180, 'Longitude must be between -180 and 180')
+    .nullable()
+    .optional(),
+};
+
 export const createGardenSchema = z
   .object({
     gardenName: z.string().min(1, 'Garden name is required').trim(),
-    totalSurfaceArea: z.number().nonnegative('Total surface area must be a non-negative number'),
+    totalWidth: z.number().positive('Total width must be greater than zero'),
+    totalHeight: z.number().positive('Total height must be greater than zero'),
     locationDescription: z.string().nullable().optional(),
-    latitude: z
-      .number()
-      .min(-90, 'Latitude must be between -90 and 90')
-      .max(90, 'Latitude must be between -90 and 90')
-      .nullable()
-      .optional(),
-    longitude: z
-      .number()
-      .min(-180, 'Longitude must be between -180 and 180')
-      .max(180, 'Longitude must be between -180 and 180')
-      .nullable()
-      .optional(),
+    sunDirection: sunDirectionSchema,
+    ...coordinateSchema,
   })
   .refine(
     (data) => {
@@ -38,11 +46,22 @@ export const createGardenSchema = z
 
 z.globalRegistry.add(createGardenSchema, { id: 'CreateGarden' });
 
+export type CreateGardenPayload = z.infer<typeof createGardenSchema>;
+
 export const updateGardenSchema = createGardenSchema;
 
 z.globalRegistry.add(updateGardenSchema, { id: 'UpdateGarden' });
 
-export const gardenResponseSchema = createGardenSchema.safeExtend({
+export type UpdateGardenPayload = z.infer<typeof updateGardenSchema>;
+
+export const gardenResponseSchema = z.object({
+  gardenName: z.string(),
+  totalSurfaceArea: z.number().nonnegative(),
+  totalWidth: z.number().nonnegative(),
+  totalHeight: z.number().nonnegative(),
+  locationDescription: z.string().nullable(),
+  sunDirection: sunDirectionSchema,
+  ...coordinateSchema,
   gardenId: z.number(),
   createdAt: z.coerce.string(),
   updatedAt: z.coerce.string(),

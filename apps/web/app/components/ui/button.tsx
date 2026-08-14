@@ -17,7 +17,7 @@ export const buttonVariants = cva(
         ghost:
           'border-transparent bg-transparent text-[var(--rootly-text-muted)] hover:bg-[var(--rootly-surface-muted)]',
         danger:
-          'border-[var(--rootly-danger)] bg-[var(--rootly-danger)] text-white hover:brightness-95',
+          'border-[var(--rootly-danger-action)] bg-[var(--rootly-danger-action)] text-[var(--rootly-danger-action-foreground)] hover:border-[var(--rootly-danger-action-hover)] hover:bg-[var(--rootly-danger-action-hover)]',
       },
       size: {
         sm: 'h-8 px-3 text-xs',

@@ -22,7 +22,7 @@ type DashboardShellProps = {
 
 const navItems = [
   { label: 'Dashboard', to: '/dashboard', icon: LayoutDashboard, activePath: '/dashboard' },
-  { label: 'Gardens', to: '/dashboard', icon: Sprout },
+  { label: 'Gardens', to: '/dashboard/gardens', icon: Sprout, activePath: '/dashboard/gardens' },
   { label: 'Plants', to: '/dashboard/plants', icon: Flower2, activePath: '/dashboard/plants' },
   { label: 'Care', to: '/dashboard', icon: CalendarDays },
 ];
@@ -47,12 +47,6 @@ export function DashboardHome({ user }: DashboardShellProps) {
           eyebrow="Garden workspace"
           title={`Welcome back, ${firstName}`}
           description="Your gardens, plantings, and care reminders are ready to organize."
-          actions={
-            <Button>
-              <Plus aria-hidden="true" className="h-4 w-4" />
-              Add garden
-            </Button>
-          }
         />
 
         <PageGrid columns={4} gap="sm">
@@ -78,9 +72,11 @@ export function DashboardHome({ user }: DashboardShellProps) {
               title="Start with your first garden"
               description="Add a garden to track planting space, locations, and the plants growing there."
               action={
-                <Button>
-                  <Plus aria-hidden="true" className="h-4 w-4" />
-                  Add garden
+                <Button asChild>
+                  <Link to="/dashboard/gardens?new=1">
+                    <Plus aria-hidden="true" className="h-4 w-4" />
+                    Add garden
+                  </Link>
                 </Button>
               }
             />
