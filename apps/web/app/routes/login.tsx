@@ -1,6 +1,6 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from '@remix-run/node';
 import { json, redirect } from '@remix-run/node';
-import { Form, Link, useActionData, useNavigation } from '@remix-run/react';
+import { Form, Link, useActionData, useLoaderData, useNavigation } from '@remix-run/react';
 import { useEffect } from 'react';
 import { z } from 'zod/v4';
 import { PageContainer, PageStack } from '@/components/layout';
@@ -11,7 +11,7 @@ import { loginUser } from '@/features/users/api/users.server';
 import { LoginForm, type LoginFormErrors } from '@/features/users/components';
 import { ApiClientError } from '@/lib/api.server';
 import { createUserSession, getCurrentUser } from '@/lib/session.server';
-import { useMessages } from '@/providers';
+import { useMessages, useRouteMessages } from '@/providers';
 
 const loginFormSchema = z.object({
   emailAddress: z
@@ -45,7 +45,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
     return redirect('/dashboard');
   }
 
-  return null;
+  const url = new URL(request.url);
+
+  return {
+    toastMessage: getToastMessage(url.searchParams.get('toast')),
+  };
 }
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -112,10 +116,12 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function Login() {
+  const { toastMessage } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
   const messages = useMessages();
   const isSubmitting = navigation.state === 'submitting';
+  useRouteMessages({ successMessage: toastMessage });
 
   useEffect(() => {
     if (!actionData?.messageId) {
@@ -188,4 +194,13 @@ function toFormErrors(error: z.ZodError): LoginFormErrors {
 
 function createMessageId() {
   return `${Date.now()}-${Math.random()}`;
+}
+
+function getToastMessage(value: string | null) {
+  switch (value) {
+    case 'account-created':
+      return 'Account created. Log in to continue.';
+    default:
+      return null;
+  }
 }

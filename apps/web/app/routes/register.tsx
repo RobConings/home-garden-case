@@ -1,5 +1,5 @@
 import type { ActionFunctionArgs, MetaFunction } from '@remix-run/node';
-import { json } from '@remix-run/node';
+import { json, redirect } from '@remix-run/node';
 import { Form, Link, useActionData, useNavigation } from '@remix-run/react';
 import { useEffect } from 'react';
 import { z } from 'zod/v4';
@@ -43,7 +43,6 @@ type RegisterActionData = {
     lastName: string;
     emailAddress: string;
   };
-  successMessage?: string;
   messageId?: string;
 };
 
@@ -83,19 +82,8 @@ export async function action({ request }: ActionFunctionArgs) {
   }
 
   try {
-    const user = await registerUser(parsed.data);
-    return json<RegisterActionData>({
-      errors: {},
-      values: {
-        firstName: user.firstName ?? parsed.data.firstName,
-        lastName: user.lastName ?? parsed.data.lastName,
-        emailAddress: user.emailAddress,
-      },
-      successMessage: `Account created for ${user.firstName ?? parsed.data.firstName} ${
-        user.lastName ?? parsed.data.lastName
-      }.`,
-      messageId: createMessageId(),
-    });
+    await registerUser(parsed.data);
+    return redirect('/login?toast=account-created');
   } catch (error) {
     if (error instanceof ApiClientError) {
       return json<RegisterActionData>(
@@ -145,11 +133,6 @@ export default function Register() {
       return;
     }
 
-    if (actionData.successMessage) {
-      messages.showSuccess(actionData.successMessage);
-      return;
-    }
-
     if (actionData.errors.form) {
       messages.showError(actionData.errors.form);
       return;
@@ -184,7 +167,6 @@ export default function Register() {
             errors={actionData?.errors}
             values={actionData?.values}
             isSubmitting={isSubmitting}
-            successMessage={actionData?.successMessage}
             cancelAction={
               <Button asChild variant="ghost">
                 <Link to="/">Cancel</Link>

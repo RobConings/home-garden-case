@@ -28,15 +28,18 @@ const MessageContext = createContext<MessageContextValue | null>(null);
 
 const messageStyles = {
   success: {
-    className: 'border-[var(--rootly-success)] text-[var(--rootly-success)]',
+    className:
+      'border-[var(--rootly-primary)] bg-[var(--rootly-primary-soft)] text-[var(--rootly-primary)]',
     icon: CheckCircle2,
   },
   error: {
-    className: 'border-[var(--rootly-danger)] text-[var(--rootly-danger)]',
+    className:
+      'border-[var(--rootly-danger)] bg-[var(--rootly-danger-soft)] text-[var(--rootly-danger)]',
     icon: XCircle,
   },
   warning: {
-    className: 'border-[var(--rootly-accent)] text-[var(--rootly-accent)]',
+    className:
+      'border-[var(--rootly-accent)] bg-[var(--rootly-accent-soft)] text-[var(--rootly-accent)]',
     icon: AlertTriangle,
   },
 };
@@ -57,7 +60,17 @@ export function MessageProvider({ children }: MessageProviderProps) {
       }
 
       const id = Date.now() + Math.floor(Math.random() * 1000);
-      setMessages((currentMessages) => [...currentMessages, { id, type, text: cleanText }]);
+      setMessages((currentMessages) => {
+        const hasActiveDuplicate = currentMessages.some(
+          (message) => message.type === type && message.text === cleanText,
+        );
+
+        if (hasActiveDuplicate) {
+          return currentMessages;
+        }
+
+        return [...currentMessages, { id, type, text: cleanText }];
+      });
       window.setTimeout(() => dismissMessage(id), 5000);
     },
     [dismissMessage],
@@ -137,15 +150,13 @@ function MessageToast({
     <div
       aria-live={isError ? 'assertive' : 'polite'}
       className={[
-        'flex items-start gap-3 rounded-md border-l-4 border-y border-r bg-[var(--rootly-surface)] px-4 py-3 text-sm shadow-lg',
+        'flex items-start gap-3 rounded-md border-l-4 border-y border-r px-4 py-3 text-sm shadow-lg',
         style.className,
       ].join(' ')}
       role={isError ? 'alert' : 'status'}
     >
       <Icon aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0" />
-      <p className="min-w-0 flex-1 font-medium leading-5 text-[var(--rootly-text)]">
-        {message.text}
-      </p>
+      <p className="min-w-0 flex-1 font-medium leading-5">{message.text}</p>
       <Button
         type="button"
         size="icon"

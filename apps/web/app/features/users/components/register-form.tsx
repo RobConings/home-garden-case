@@ -19,7 +19,6 @@ export type RegisterFormProps = {
   values?: RegisterFormValues;
   as?: ElementType;
   isSubmitting?: boolean;
-  successMessage?: string;
   cancelAction?: ReactNode;
 };
 
@@ -28,7 +27,6 @@ export function RegisterForm({
   values,
   as: FormComponent = 'form',
   isSubmitting = false,
-  successMessage,
   cancelAction,
 }: RegisterFormProps) {
   return (
@@ -46,11 +44,6 @@ export function RegisterForm({
         </>
       }
     >
-      {successMessage ? (
-        <p className="rounded-md border border-[var(--rootly-primary)]/25 bg-[var(--rootly-primary-soft)] px-3 py-2 text-sm text-[var(--rootly-primary)]">
-          {successMessage}
-        </p>
-      ) : null}
       {errors.form ? (
         <p className="rounded-md border border-[var(--rootly-danger)]/25 bg-[var(--rootly-danger-soft)] px-3 py-2 text-sm text-[var(--rootly-danger)]">
           {errors.form}
