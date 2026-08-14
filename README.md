@@ -48,19 +48,19 @@ Web        http://localhost:3001
 Run the API:
 
 ```sh
-NX_DAEMON=false npx nx dev api
+NX_DAEMON=false nx dev api
 ```
 
 Run the web app:
 
 ```sh
-NX_DAEMON=false npx nx dev web --host 0.0.0.0 --port 3101
+NX_DAEMON=false nx dev web --host 0.0.0.0 --port 3101
 ```
 
 Run Storybook:
 
 ```sh
-NX_DAEMON=false npx nx storybook @itp-home-garden/web --host 0.0.0.0 --port 6006
+NX_DAEMON=false nx storybook @itp-home-garden/web --host 0.0.0.0 --port 6006
 ```
 
 `NX_DAEMON=false` is recommended for this server setup because PM2-managed Nx dev processes can conflict with Nx daemon/plugin workers.
@@ -119,8 +119,8 @@ npm run pm2:dev:start
 Build first:
 
 ```sh
-NX_DAEMON=false npx nx build api
-NX_DAEMON=false npx nx build web
+NX_DAEMON=false nx build api
+NX_DAEMON=false nx build web
 ```
 
 Start the built API and web app:
@@ -184,7 +184,7 @@ Main features:
 
 The frontend is a Remix app.
 
-Planned frontend stack:
+Frontend stack:
 
 - React
 - Remix
@@ -208,6 +208,7 @@ components/
   ui/
   shared/
   layout/
+providers/
 features/
   gardens/
     components/
@@ -226,6 +227,7 @@ Frontend path aliases:
 @/features/*     -> apps/web/app/features/*
 @/hooks/*        -> apps/web/app/hooks/*
 @/lib/*          -> apps/web/app/lib/*
+@/providers/*    -> apps/web/app/providers/*
 @/routes/*       -> apps/web/app/routes/*
 @/types/*        -> apps/web/app/types/*
 ```
@@ -235,16 +237,16 @@ Frontend path aliases:
 Run checks through Nx:
 
 ```sh
-NX_DAEMON=false npx nx lint web
-NX_DAEMON=false npx nx test web
-NX_DAEMON=false npx nx build web
-NX_DAEMON=false npx nx build api
+NX_DAEMON=false nx lint web
+NX_DAEMON=false nx test web
+NX_DAEMON=false nx build web
+NX_DAEMON=false nx build api
 ```
 
 Run all common targets:
 
 ```sh
-NX_DAEMON=false npx nx run-many -t lint test build typecheck
+NX_DAEMON=false nx run-many -t lint test build typecheck
 ```
 
 ## Storybook
