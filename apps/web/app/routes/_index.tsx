@@ -52,7 +52,10 @@ export const meta: MetaFunction = () => [
 
 export default function Index() {
   return (
-    <PageStack className="min-h-screen bg-[var(--rootly-background)] text-[var(--rootly-text)]" gap="none">
+    <PageStack
+      className="min-h-screen bg-[var(--rootly-background)] text-[var(--rootly-text)]"
+      gap="none"
+    >
       <PublicHeader />
       <PageGrid layout="oneColumn">
         <Banner

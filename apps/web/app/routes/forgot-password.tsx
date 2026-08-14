@@ -116,10 +116,9 @@ export async function action({ request }: ActionFunctionArgs) {
       return json<ResetPasswordActionData>(
         {
           errors: {
-            form:
-              userWasNotFound
-                ? 'No Rootly account uses this email.'
-                : 'We could not reset your password. Please try again.',
+            form: userWasNotFound
+              ? 'No Rootly account uses this email.'
+              : 'We could not reset your password. Please try again.',
           },
           values: {
             emailAddress: parsed.data.emailAddress,

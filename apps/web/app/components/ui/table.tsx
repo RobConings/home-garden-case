@@ -19,7 +19,10 @@ export function TableBody({ className, ...props }: HTMLAttributes<HTMLTableSecti
 
 export function TableRow({ className, ...props }: HTMLAttributes<HTMLTableRowElement>) {
   return (
-    <tr className={cn('transition-colors hover:bg-[var(--rootly-surface-muted)]', className)} {...props} />
+    <tr
+      className={cn('transition-colors hover:bg-[var(--rootly-surface-muted)]', className)}
+      {...props}
+    />
   );
 }
 
@@ -37,6 +40,9 @@ export function TableHead({ className, ...props }: ThHTMLAttributes<HTMLTableCel
 
 export function TableCell({ className, ...props }: TdHTMLAttributes<HTMLTableCellElement>) {
   return (
-    <td className={cn('px-4 py-3 align-middle text-[var(--rootly-text-muted)]', className)} {...props} />
+    <td
+      className={cn('px-4 py-3 align-middle text-[var(--rootly-text-muted)]', className)}
+      {...props}
+    />
   );
 }

@@ -141,7 +141,7 @@ export function GeneralList<TItem>({
       </PageRow>
 
       {filteredItems.length === 0 && !isLoading ? (
-        emptyState ?? null
+        (emptyState ?? null)
       ) : (
         <>
           {view === 'cards' ? (

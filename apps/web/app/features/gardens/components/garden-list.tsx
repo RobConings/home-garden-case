@@ -85,8 +85,8 @@ function GardenCard({ garden }: { garden: Garden }) {
           {formatArea(garden.totalSurfaceArea)} m2
         </p>
         <p>
-          <span className="font-medium text-[var(--rootly-text)]">Grid:</span>{' '}
-          {garden.gridSizeCm} cm
+          <span className="font-medium text-[var(--rootly-text)]">Grid:</span> {garden.gridSizeCm}{' '}
+          cm
         </p>
       </CardContent>
       <CardFooter className="justify-end">

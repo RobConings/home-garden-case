@@ -12,7 +12,14 @@ export type StatCardProps = {
   className?: string;
 };
 
-export function StatCard({ label, value, description, icon: Icon, trend, className }: StatCardProps) {
+export function StatCard({
+  label,
+  value,
+  description,
+  icon: Icon,
+  trend,
+  className,
+}: StatCardProps) {
   return (
     <Card className={cn('overflow-hidden', className)}>
       <CardContent className="p-5">
@@ -31,7 +38,11 @@ export function StatCard({ label, value, description, icon: Icon, trend, classNa
         </div>
         {description || trend ? (
           <div className="mt-4 flex items-center justify-between gap-3 text-sm">
-            {description ? <p className="text-[var(--rootly-text-muted)]">{description}</p> : <span />}
+            {description ? (
+              <p className="text-[var(--rootly-text-muted)]">{description}</p>
+            ) : (
+              <span />
+            )}
             {trend ? <div className="font-medium text-[var(--rootly-primary)]">{trend}</div> : null}
           </div>
         ) : null}

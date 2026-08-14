@@ -1,11 +1,4 @@
-import {
-  CalendarClock,
-  Droplets,
-  Leaf,
-  Sun,
-  TriangleAlert,
-  type LucideIcon,
-} from 'lucide-react';
+import { CalendarClock, Droplets, Leaf, Sun, TriangleAlert, type LucideIcon } from 'lucide-react';
 import { PageContainer, PageGrid, PageStack } from '@/components/layout';
 import { PageTitle, StatCard } from '@/components/shared';
 import { Badge } from '@/components/ui/badge';
@@ -142,24 +135,14 @@ export function CareOverview() {
         />
 
         <PageGrid columns={4} gap="sm">
-          <StatCard
-            label="Water today"
-            value={dueToday}
-            description="Plants due"
-            icon={Droplets}
-          />
+          <StatCard label="Water today" value={dueToday} description="Plants due" icon={Droplets} />
           <StatCard
             label="Average sun"
             value={`${averageSun.toFixed(1)} h`}
             description="Across tracked plants"
             icon={Sun}
           />
-          <StatCard
-            label="Nutrition"
-            value={nutritionDue}
-            description="Due tomorrow"
-            icon={Leaf}
-          />
+          <StatCard label="Nutrition" value={nutritionDue} description="Due tomorrow" icon={Leaf} />
           <StatCard
             label="Needs review"
             value={needsAttention}

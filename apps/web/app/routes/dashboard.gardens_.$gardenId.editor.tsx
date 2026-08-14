@@ -120,9 +120,7 @@ export async function action({ params, request }: ActionFunctionArgs) {
       {
         type: 'error',
         message:
-          error instanceof Error
-            ? error.message
-            : 'We could not save the garden editor right now.',
+          error instanceof Error ? error.message : 'We could not save the garden editor right now.',
       },
       { status },
     );

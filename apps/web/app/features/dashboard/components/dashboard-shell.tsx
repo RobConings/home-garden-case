@@ -1,13 +1,6 @@
 import { Form, Link } from '@remix-run/react';
 import { useState, type ReactNode } from 'react';
-import {
-  CalendarDays,
-  Flower2,
-  LayoutDashboard,
-  LogOut,
-  Plus,
-  Sprout,
-} from 'lucide-react';
+import { CalendarDays, Flower2, LayoutDashboard, LogOut, Plus, Sprout } from 'lucide-react';
 import { AppShell, PageContainer, PageGrid, PageRow, PageStack } from '@/components/layout';
 import { EmptyState, PageTitle, StatCard, ThemeToggle } from '@/components/shared';
 import { Badge } from '@/components/ui/badge';

@@ -1,10 +1,6 @@
 import { apiRequest } from '@/lib/api.server';
 
-export type GardenEditorShapeType =
-  | 'blocking_building'
-  | 'pathway'
-  | 'grass'
-  | 'plant_area';
+export type GardenEditorShapeType = 'blocking_building' | 'pathway' | 'grass' | 'plant_area';
 
 export type GardenEditorPoint = {
   x: number;

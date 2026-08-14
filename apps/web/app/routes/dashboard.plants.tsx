@@ -4,10 +4,7 @@ import { Link, useActionData, useLoaderData } from '@remix-run/react';
 import { PageContainer, PageStack } from '@/components/layout';
 import { PageTitle } from '@/components/shared';
 import { Button } from '@/components/ui/button';
-import {
-  deletePlantLibraryEntry,
-  getPlantLibraryPage,
-} from '@/features/plants/api';
+import { deletePlantLibraryEntry, getPlantLibraryPage } from '@/features/plants/api';
 import { PlantLibraryList } from '@/features/plants/components';
 import { ApiClientError } from '@/lib/api.server';
 import { requireUser } from '@/lib/session.server';

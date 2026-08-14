@@ -9,7 +9,10 @@ export type AppShellProps = HTMLAttributes<HTMLDivElement> & {
 export function AppShell({ className, header, sidebar, children, ...props }: AppShellProps) {
   return (
     <div
-      className={cn('min-h-screen bg-[var(--rootly-background)] text-[var(--rootly-text)]', className)}
+      className={cn(
+        'min-h-screen bg-[var(--rootly-background)] text-[var(--rootly-text)]',
+        className,
+      )}
       {...props}
     >
       {header ? (

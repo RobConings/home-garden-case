@@ -44,7 +44,8 @@ export const meta: MetaFunction = () => [
   },
   {
     name: 'description',
-    content: 'Rootly is a garden planner dashboard for managing gardens, plants, and growing space.',
+    content:
+      'Rootly is a garden planner dashboard for managing gardens, plants, and growing space.',
   },
   {
     name: 'theme-color',

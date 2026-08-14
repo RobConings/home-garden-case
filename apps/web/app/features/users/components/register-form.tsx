@@ -86,11 +86,7 @@ export function RegisterForm({
           required
         />
       </Field>
-      <Field
-        id="password"
-        label="Password"
-        error={errors.password}
-      >
+      <Field id="password" label="Password" error={errors.password}>
         <PasswordInput
           id="password"
           name="password"

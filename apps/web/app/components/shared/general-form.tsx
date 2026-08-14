@@ -32,9 +32,7 @@ export function GeneralForm({
             <h3 className="text-base font-semibold text-[var(--rootly-text)]">{title}</h3>
           ) : null}
           {description ? (
-            <p className="mt-1 text-sm leading-6 text-[var(--rootly-text-muted)]">
-              {description}
-            </p>
+            <p className="mt-1 text-sm leading-6 text-[var(--rootly-text-muted)]">{description}</p>
           ) : null}
         </div>
       ) : null}

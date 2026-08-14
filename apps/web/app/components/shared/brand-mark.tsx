@@ -17,7 +17,9 @@ export function BrandMark({ className, imageClassName, compact = false }: BrandM
           imageClassName,
         )}
       />
-      {compact ? <span className="text-base font-semibold text-[var(--rootly-text)]">Rootly</span> : null}
+      {compact ? (
+        <span className="text-base font-semibold text-[var(--rootly-text)]">Rootly</span>
+      ) : null}
     </div>
   );
 }

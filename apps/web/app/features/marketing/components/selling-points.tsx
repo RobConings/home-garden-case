@@ -1,5 +1,11 @@
 import { Droplets, LibraryBig, MapPinned, Sprout, SunMedium } from 'lucide-react';
-import { ContentSection, PageContainer, PageRow, PageSection, PageStack } from '@/components/layout';
+import {
+  ContentSection,
+  PageContainer,
+  PageRow,
+  PageSection,
+  PageStack,
+} from '@/components/layout';
 import { FeatureCard, NotificationCallout, PageTitle } from '@/components/shared';
 
 const sellingPoints = [

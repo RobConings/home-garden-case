@@ -5,7 +5,10 @@ async function up(db: Kysely<Database>) {
   await db.schema
     .alterTable('user')
     .addColumn('themePreference', 'text', (col) =>
-      col.notNull().defaultTo('light').check(sql`themePreference IN ('light', 'dark')`),
+      col
+        .notNull()
+        .defaultTo('light')
+        .check(sql`themePreference IN ('light', 'dark')`),
     )
     .execute();
 }

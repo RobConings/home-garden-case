@@ -429,9 +429,14 @@ async function up(db: Kysely<Database>) {
     .addColumn('spacingCm', 'real')
     .addColumn('daysToMaturity', 'integer')
     .addColumn('source', 'text', (col) =>
-      col.notNull().defaultTo('system').check(sql`source IN ('system', 'user')`),
+      col
+        .notNull()
+        .defaultTo('system')
+        .check(sql`source IN ('system', 'user')`),
     )
-    .addColumn('ownerUserId', 'integer', (col) => col.references('user.userId').onDelete('set null'))
+    .addColumn('ownerUserId', 'integer', (col) =>
+      col.references('user.userId').onDelete('set null'),
+    )
     .addColumn('createdAt', 'text', (col) => col.defaultTo(sql`CURRENT_TIMESTAMP`).notNull())
     .addColumn('updatedAt', 'text', (col) => col.defaultTo(sql`CURRENT_TIMESTAMP`).notNull())
     .execute();

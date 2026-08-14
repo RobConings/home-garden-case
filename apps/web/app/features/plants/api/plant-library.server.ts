@@ -54,10 +54,7 @@ export type CreatePlantLibraryEntryPayload = {
   ownerUserId: number;
 };
 
-export type UpdatePlantLibraryEntryPayload = Omit<
-  CreatePlantLibraryEntryPayload,
-  'ownerUserId'
->;
+export type UpdatePlantLibraryEntryPayload = Omit<CreatePlantLibraryEntryPayload, 'ownerUserId'>;
 
 export async function getPlantLibrary(ownerUserId?: number) {
   const query = ownerUserId ? `?ownerUserId=${ownerUserId}` : '';
