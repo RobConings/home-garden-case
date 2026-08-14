@@ -1,5 +1,5 @@
-import { Form, Link, useLocation } from '@remix-run/react';
-import type { ReactNode } from 'react';
+import { Form, Link } from '@remix-run/react';
+import { useState, type ReactNode } from 'react';
 import {
   CalendarDays,
   Flower2,
@@ -14,22 +14,26 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { UserSession } from '@/lib/session.server';
+import { DashboardSidebar } from './dashboard-sidebar';
 
 type DashboardShellProps = {
   user: UserSession;
   children?: ReactNode;
 };
 
-const navItems = [
-  { label: 'Dashboard', to: '/dashboard', icon: LayoutDashboard, activePath: '/dashboard' },
-  { label: 'Gardens', to: '/dashboard/gardens', icon: Sprout, activePath: '/dashboard/gardens' },
-  { label: 'Plants', to: '/dashboard/plants', icon: Flower2, activePath: '/dashboard/plants' },
-  { label: 'Care', to: '/dashboard', icon: CalendarDays },
-];
-
 export function DashboardShell({ user, children }: DashboardShellProps) {
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+
   return (
-    <AppShell header={<DashboardHeader user={user} />} sidebar={<DashboardSidebar />}>
+    <AppShell
+      header={<DashboardHeader user={user} />}
+      sidebar={
+        <DashboardSidebar
+          collapsed={isSidebarCollapsed}
+          onCollapsedChange={setIsSidebarCollapsed}
+        />
+      }
+    >
       {children ?? <DashboardHome user={user} />}
     </AppShell>
   );
@@ -114,14 +118,14 @@ export function DashboardHome({ user }: DashboardShellProps) {
 
 function DashboardHeader({ user }: DashboardShellProps) {
   return (
-    <PageContainer className="flex h-16 items-center justify-between py-0">
-      <Link to="/dashboard" aria-label="Go to Rootly dashboard">
+    <PageContainer size="full" className="flex h-16 items-center justify-between py-0">
+      <Link to="/dashboard" aria-label="Go to Rootly dashboard" className="flex items-center">
         <img
           src="/rootly-logo.png"
           alt="Rootly garden planner logo"
           width={1536}
           height={800}
-          className="h-12 w-auto max-w-[170px] object-contain object-left"
+          className="h-14 w-auto max-w-[220px] object-contain object-left"
         />
       </Link>
       <PageRow align="center" gap="sm">
@@ -131,32 +135,5 @@ function DashboardHeader({ user }: DashboardShellProps) {
         </span>
       </PageRow>
     </PageContainer>
-  );
-}
-
-function DashboardSidebar() {
-  const location = useLocation();
-
-  return (
-    <nav className="grid gap-1 p-4">
-      {navItems.map((item) => {
-        const Icon = item.icon;
-        const isActive = item.activePath ? location.pathname === item.activePath : false;
-
-        return (
-          <Button
-            key={item.label}
-            asChild
-            variant={isActive ? 'subtle' : 'ghost'}
-            className="justify-start"
-          >
-            <Link to={item.to}>
-              <Icon aria-hidden="true" className="h-4 w-4" />
-              {item.label}
-            </Link>
-          </Button>
-        );
-      })}
-    </nav>
   );
 }

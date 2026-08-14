@@ -6,6 +6,7 @@ import { migration004 } from './migrations/migration004';
 import { migration005 } from './migrations/migration005';
 import { migration006 } from './migrations/migration006';
 import { migration007 } from './migrations/migration007';
+import { migration008 } from './migrations/migration008';
 import { Database } from './types';
 
 export class MigratorService {
@@ -27,6 +28,7 @@ export class MigratorService {
       migration005,
       migration006,
       migration007,
+      migration008,
         }),
       },
     });

@@ -5,6 +5,7 @@ export interface Database {
   garden: GardenTable;
   gardenEditorShape: GardenEditorShapeTable;
   gardenEditorShapePoint: GardenEditorShapePointTable;
+  gardenEditorPlant: GardenEditorPlantTable;
   plant: PlantTable;
   plantLibrary: PlantLibraryTable;
 }
@@ -67,6 +68,19 @@ export interface GardenEditorShapePointTable {
 
 export type GardenEditorShapePoint = Selectable<GardenEditorShapePointTable>;
 export type NewGardenEditorShapePoint = Insertable<GardenEditorShapePointTable>;
+
+export interface GardenEditorPlantTable {
+  gardenEditorPlantId: Generated<number>;
+  gardenId: number;
+  plantLibraryId: number;
+  x: number;
+  y: number;
+  createdAt: ColumnType<Date, string | undefined, never>;
+  updatedAt: ColumnType<Date, string | undefined, never>;
+}
+
+export type GardenEditorPlant = Selectable<GardenEditorPlantTable>;
+export type NewGardenEditorPlant = Insertable<GardenEditorPlantTable>;
 
 export interface PlantTable {
   plantId: Generated<number>;

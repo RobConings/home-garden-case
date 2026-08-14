@@ -19,7 +19,7 @@ export function AppShell({ className, header, sidebar, children, ...props }: App
       ) : null}
       <div className="flex min-h-[calc(100vh-64px)]">
         {sidebar ? (
-          <aside className="hidden w-64 shrink-0 border-r border-[var(--rootly-border)] bg-[var(--rootly-surface)] lg:block">
+          <aside className="hidden shrink-0 border-r border-[var(--rootly-border)] bg-[var(--rootly-surface)] lg:block">
             {sidebar}
           </aside>
         ) : null}

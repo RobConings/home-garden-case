@@ -3,16 +3,20 @@ import { json, redirect } from '@remix-run/node';
 import { useLoaderData } from '@remix-run/react';
 import {
   getGarden,
+  getGardenEditorPlants,
   getGardenEditorShapes,
+  replaceGardenEditorPlants,
   replaceGardenEditorShapes,
   type Garden,
 } from '@/features/gardens/api';
+import { getPlantLibrary } from '@/features/plants/api';
 import {
   GardenEditor,
   type GardenEditorActionData,
   type GardenEditorLoaderData,
   type EditorShapeType,
   type GardenEditorShape,
+  type PlacedPlant,
 } from '@/features/gardens/components';
 import { ApiClientError } from '@/lib/api.server';
 import { requireUser } from '@/lib/session.server';
@@ -26,7 +30,7 @@ export const meta: MetaFunction = () => [
 ];
 
 export async function loader({ params, request }: LoaderFunctionArgs) {
-  await requireUser(request);
+  const user = await requireUser(request);
   const gardenId = Number(params.gardenId);
 
   if (!Number.isFinite(gardenId)) {
@@ -36,9 +40,19 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
   try {
     const garden = await getGarden(gardenId);
     const shapes = await getGardenEditorShapes(gardenId);
+    const plants = await getGardenEditorPlants(gardenId);
+    const plantLibrary = await getPlantLibrary(user.userId);
 
     return {
       garden,
+      plantLibrary,
+      plants: plants.map((plant) => ({
+        id: String(plant.gardenEditorPlantId),
+        persistedId: plant.gardenEditorPlantId,
+        plantLibraryId: plant.plantLibraryId,
+        x: plant.x,
+        y: plant.y,
+      })),
       shapes: shapes.map((shape) => ({
         id: String(shape.gardenEditorShapeId),
         persistedId: shape.gardenEditorShapeId,
@@ -63,17 +77,33 @@ export async function action({ params, request }: ActionFunctionArgs) {
   try {
     const garden = await getGarden(gardenId);
     const shapes = readShapesPayload(formData);
+    const plants = readPlantsPayload(formData);
     validateShapeBounds(garden, shapes);
+    validatePlantBounds(garden, plants);
     const savedShapes = await replaceGardenEditorShapes(gardenId, {
       shapes: shapes.map((shape) => ({
         shapeType: shape.type,
         points: shape.points,
       })),
     });
+    const savedPlants = await replaceGardenEditorPlants(gardenId, {
+      plants: plants.map((plant) => ({
+        plantLibraryId: plant.plantLibraryId,
+        x: plant.x,
+        y: plant.y,
+      })),
+    });
 
     return json<GardenEditorActionData>({
       type: 'success',
       message: 'Garden editor saved.',
+      plants: savedPlants.map((plant) => ({
+        id: String(plant.gardenEditorPlantId),
+        persistedId: plant.gardenEditorPlantId,
+        plantLibraryId: plant.plantLibraryId,
+        x: plant.x,
+        y: plant.y,
+      })),
       shapes: savedShapes.map((shape) => ({
         id: String(shape.gardenEditorShapeId),
         persistedId: shape.gardenEditorShapeId,
@@ -131,12 +161,52 @@ function readShapesPayload(formData: FormData): GardenEditorShape[] {
   });
 }
 
+function readPlantsPayload(formData: FormData): PlacedPlant[] {
+  const rawPlants = JSON.parse(String(formData.get('plants') || '[]')) as PlacedPlant[];
+
+  if (!Array.isArray(rawPlants)) {
+    throw new Error('Invalid plants payload.');
+  }
+
+  return rawPlants.map((plant) => {
+    const plantLibraryId = Number(plant.plantLibraryId);
+    const x = Number(plant.x);
+    const y = Number(plant.y);
+
+    if (
+      !Number.isInteger(plantLibraryId) ||
+      plantLibraryId <= 0 ||
+      !Number.isFinite(x) ||
+      !Number.isFinite(y) ||
+      x < 0 ||
+      y < 0
+    ) {
+      throw new Error('Invalid plant placement.');
+    }
+
+    return {
+      id: String(plant.id || 'plant'),
+      plantLibraryId,
+      x,
+      y,
+    };
+  });
+}
+
 function validateShapeBounds(garden: Garden, shapes: GardenEditorShape[]) {
   for (const shape of shapes) {
     for (const point of shape.points) {
       if (point.x > garden.totalWidth || point.y > garden.totalHeight) {
         throw new Error('Garden editor points must stay inside the garden dimensions.');
       }
+    }
+  }
+}
+
+function validatePlantBounds(garden: Garden, plants: PlacedPlant[]) {
+  for (const plant of plants) {
+    if (plant.x > garden.totalWidth || plant.y > garden.totalHeight) {
+      throw new Error('Garden editor plants must stay inside the garden dimensions.');
     }
   }
 }

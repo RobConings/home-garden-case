@@ -1,5 +1,10 @@
 import { Kysely } from 'kysely';
-import { Database, NewGardenEditorShape, NewGardenEditorShapePoint } from '../types';
+import {
+  Database,
+  NewGardenEditorPlant,
+  NewGardenEditorShape,
+  NewGardenEditorShapePoint,
+} from '../types';
 
 export type GardenEditorShapeWithPoints = {
   gardenEditorShapeId: number;
@@ -8,6 +13,13 @@ export type GardenEditorShapeWithPoints = {
     x: number;
     y: number;
   }>;
+};
+
+export type GardenEditorPlantPlacement = {
+  gardenEditorPlantId: number;
+  plantLibraryId: number;
+  x: number;
+  y: number;
 };
 
 export class GardenEditorRepository {
@@ -102,5 +114,42 @@ export class GardenEditorRepository {
     });
 
     return await this.findByGardenId(gardenId);
+  }
+
+  async findPlantsByGardenId(gardenId: number): Promise<GardenEditorPlantPlacement[]> {
+    return await this.db
+      .selectFrom('gardenEditorPlant')
+      .where('gardenId', '=', gardenId)
+      .select(['gardenEditorPlantId', 'plantLibraryId', 'x', 'y'])
+      .orderBy('gardenEditorPlantId', 'asc')
+      .execute();
+  }
+
+  async replaceGardenPlants(
+    gardenId: number,
+    plants: Array<{
+      plantLibraryId: number;
+      x: number;
+      y: number;
+    }>,
+  ): Promise<GardenEditorPlantPlacement[]> {
+    await this.db.transaction().execute(async (trx) => {
+      await trx.deleteFrom('gardenEditorPlant').where('gardenId', '=', gardenId).execute();
+
+      if (plants.length === 0) {
+        return;
+      }
+
+      const newPlants: NewGardenEditorPlant[] = plants.map((plant) => ({
+        gardenId,
+        plantLibraryId: plant.plantLibraryId,
+        x: plant.x,
+        y: plant.y,
+      }));
+
+      await trx.insertInto('gardenEditorPlant').values(newPlants).execute();
+    });
+
+    return await this.findPlantsByGardenId(gardenId);
   }
 }
