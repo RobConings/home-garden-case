@@ -7,9 +7,7 @@ function renderSidebar(pathname = '/dashboard/care') {
   const RemixStub = createRemixStub([
     {
       path: '*',
-      Component: () => (
-        <DashboardSidebar collapsed={false} onCollapsedChange={() => undefined} />
-      ),
+      Component: () => <DashboardSidebar collapsed={false} onCollapsedChange={() => undefined} />,
     },
   ]);
 
@@ -20,10 +18,7 @@ describe('DashboardSidebar', () => {
   it('links Care to the care dashboard route', () => {
     renderSidebar();
 
-    expect(screen.getByRole('link', { name: /care/i })).toHaveAttribute(
-      'href',
-      '/dashboard/care',
-    );
+    expect(screen.getByRole('link', { name: /care/i })).toHaveAttribute('href', '/dashboard/care');
   });
 
   it('marks Care as active on the care route', () => {

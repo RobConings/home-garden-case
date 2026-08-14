@@ -82,35 +82,33 @@ export default async function (fastify: FastifyInstance) {
    * GET /plant-library/:plantLibraryId
    * Get a selectable plant template by ID
    */
-  fastify
-    .withTypeProvider<ZodTypeProvider>()
-    .get<{
-      Params: z.infer<typeof plantLibraryIdParamsSchema>;
-      Querystring: z.infer<typeof plantLibraryOwnerQuerySchema>;
-    }>(
-      '/plant-library/:plantLibraryId',
-      {
-        schema: {
-          description: 'Get a selectable plant template by ID',
-          tags: ['plant-library'],
-          params: plantLibraryIdParamsSchema,
-          querystring: plantLibraryOwnerQuerySchema,
-          response: {
-            200: plantLibraryResponseSchema,
-            400: validationErrorResponseSchema,
-            404: notFoundErrorResponseSchema,
-            500: internalServerErrorResponseSchema,
-          },
+  fastify.withTypeProvider<ZodTypeProvider>().get<{
+    Params: z.infer<typeof plantLibraryIdParamsSchema>;
+    Querystring: z.infer<typeof plantLibraryOwnerQuerySchema>;
+  }>(
+    '/plant-library/:plantLibraryId',
+    {
+      schema: {
+        description: 'Get a selectable plant template by ID',
+        tags: ['plant-library'],
+        params: plantLibraryIdParamsSchema,
+        querystring: plantLibraryOwnerQuerySchema,
+        response: {
+          200: plantLibraryResponseSchema,
+          400: validationErrorResponseSchema,
+          404: notFoundErrorResponseSchema,
+          500: internalServerErrorResponseSchema,
         },
       },
-      async (request, reply) => {
-        const plant = await plantLibraryService.getVisiblePlantById(
-          request.params.plantLibraryId,
-          request.query.ownerUserId,
-        );
-        return reply.send(plant);
-      },
-    );
+    },
+    async (request, reply) => {
+      const plant = await plantLibraryService.getVisiblePlantById(
+        request.params.plantLibraryId,
+        request.query.ownerUserId,
+      );
+      return reply.send(plant);
+    },
+  );
 
   /**
    * POST /plant-library

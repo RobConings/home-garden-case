@@ -52,7 +52,9 @@ export default fp(async function (fastify: FastifyInstance) {
           case ConflictError:
             return reply.status(409).send({ error: 'Conflict error', details: [error.message] });
           case UnauthorizedError:
-            return reply.status(401).send({ error: 'Unauthorized error', details: [error.message] });
+            return reply
+              .status(401)
+              .send({ error: 'Unauthorized error', details: [error.message] });
           case ValidationError:
             return reply.status(400).send({ error: 'Validation error', details: [error.message] });
         }

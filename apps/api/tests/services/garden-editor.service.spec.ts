@@ -65,9 +65,7 @@ describe('GardenEditorService plant footprints', () => {
       { plantLibraryId: 1, size: 3, x: 0, y: 2 },
     ];
 
-    await expect(
-      service.replaceGardenEditorPlants(1, { plants }),
-    ).resolves.toEqual(plants);
+    await expect(service.replaceGardenEditorPlants(1, { plants })).resolves.toEqual(plants);
     expect(replaceGardenPlants).toHaveBeenCalledWith(1, plants);
   });
 

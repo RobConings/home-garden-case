@@ -12,7 +12,14 @@ const meta = {
   argTypes: {
     layout: {
       control: 'select',
-      options: ['oneColumn', 'twoColumn', 'threeColumn', 'fourColumn', 'rightSidebar', 'leftSidebar'],
+      options: [
+        'oneColumn',
+        'twoColumn',
+        'threeColumn',
+        'fourColumn',
+        'rightSidebar',
+        'leftSidebar',
+      ],
     },
     gap: {
       control: 'inline-radio',

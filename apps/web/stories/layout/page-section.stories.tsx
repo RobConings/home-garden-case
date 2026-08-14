@@ -18,7 +18,17 @@ const meta = {
     },
     slot: {
       control: 'select',
-      options: ['full', 'top', 'main', 'bottom', 'sidebar', 'column1', 'column2', 'column3', 'column4'],
+      options: [
+        'full',
+        'top',
+        'main',
+        'bottom',
+        'sidebar',
+        'column1',
+        'column2',
+        'column3',
+        'column4',
+      ],
     },
   },
 } satisfies Meta<typeof PageSection>;

@@ -3,7 +3,7 @@
 
 # General Guidelines for working with Nx
 
-- Do not use npx , build or git commands. You do not have command line access. Only code base access is available. You can still use agents tools, read, write files etc. Just not these commands.
+- Do not use npx , node, build or git commands. You do not have command line access. Only code base access is available. You can still use agents tools, read, write files etc. Just not these commands.
 - When running tasks (for example build, lint, test, e2e, etc.), always prefer running the task through `nx` (i.e. `nx run`, `nx run-many`, `nx affected`) instead of using the underlying tooling directly
 - You have access to the Nx MCP server and its tools, use them to help the user
 - When answering questions about the repository, use the `nx_workspace` tool first to gain an understanding of the workspace architecture where applicable.

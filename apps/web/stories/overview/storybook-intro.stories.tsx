@@ -9,8 +9,8 @@ function StorybookIntro() {
         <p className="mb-2 text-sm font-medium text-[var(--rootly-primary)]">Rootly Storybook</p>
         <h1 className="mb-3 text-3xl font-semibold">Component workspace</h1>
         <p className="text-base leading-7 text-[var(--rootly-text-muted)]">
-          Build Rootly from reusable UI, shared composition, layout primitives, and
-          feature-scoped components. Stories live in the dedicated stories tree.
+          Build Rootly from reusable UI, shared composition, layout primitives, and feature-scoped
+          components. Stories live in the dedicated stories tree.
         </p>
       </section>
     </main>

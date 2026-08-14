@@ -105,13 +105,14 @@ describe('GardenEditor responsive layout', () => {
     });
     expect(warning).toBeInTheDocument();
     expect(
-      screen.getByText('Use a desktop or a wider browser window to draw garden zones and place plants.'),
+      screen.getByText(
+        'Use a desktop or a wider browser window to draw garden zones and place plants.',
+      ),
     ).toBeInTheDocument();
 
     expect(warning.closest('.rounded-lg')).toHaveClass('xl:hidden');
-    expect(screen.getByRole('heading', { name: 'Drawing board' }).closest('.rounded-lg')).toHaveClass(
-      'hidden',
-      'xl:flex',
-    );
+    expect(
+      screen.getByRole('heading', { name: 'Drawing board' }).closest('.rounded-lg'),
+    ).toHaveClass('hidden', 'xl:flex');
   });
 });

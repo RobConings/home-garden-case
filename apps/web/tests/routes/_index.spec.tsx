@@ -20,8 +20,5 @@ test('renders Rootly landing page', async () => {
 
   expect(await screen.findByRole('heading', { name: 'Rootly' })).toBeInTheDocument();
   expect(screen.getByText('Garden planning, without guesswork')).toBeInTheDocument();
-  expect(screen.getByRole('link', { name: 'Start planning' })).toHaveAttribute(
-    'href',
-    '/register',
-  );
+  expect(screen.getByRole('link', { name: 'Start planning' })).toHaveAttribute('href', '/register');
 });

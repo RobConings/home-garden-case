@@ -85,10 +85,7 @@ export class GardenEditorRepository {
           .execute();
       }
 
-      await trx
-        .deleteFrom('gardenEditorShape')
-        .where('gardenId', '=', gardenId)
-        .execute();
+      await trx.deleteFrom('gardenEditorShape').where('gardenId', '=', gardenId).execute();
 
       for (const [shapeIndex, shape] of shapes.entries()) {
         const insertedShape = await trx

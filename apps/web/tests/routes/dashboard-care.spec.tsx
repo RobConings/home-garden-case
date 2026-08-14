@@ -15,7 +15,11 @@ describe('dashboard care route', () => {
     render(<RemixStub initialEntries={['/dashboard/care']} />);
 
     expect(await screen.findByRole('heading', { name: 'Care plan' })).toBeInTheDocument();
-    expect(screen.getByText('Track watering rhythm, sunlight fit, and nutrition timing for the plants in your garden.')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'Track watering rhythm, sunlight fit, and nutrition timing for the plants in your garden.',
+      ),
+    ).toBeInTheDocument();
   });
 
   it('exposes care route metadata', () => {

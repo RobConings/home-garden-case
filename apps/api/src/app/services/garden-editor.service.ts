@@ -42,10 +42,7 @@ export class GardenEditorService {
     const validatedData = replaceGardenEditorShapesSchema.parse(data);
     this.validateShapeBounds(garden, validatedData.shapes);
 
-    return await this.gardenEditorRepository.replaceGardenShapes(
-      gardenId,
-      validatedData.shapes,
-    );
+    return await this.gardenEditorRepository.replaceGardenShapes(gardenId, validatedData.shapes);
   }
 
   async getGardenEditorPlants(gardenId: number) {
@@ -54,10 +51,7 @@ export class GardenEditorService {
     return await this.gardenEditorRepository.findPlantsByGardenId(gardenId);
   }
 
-  async replaceGardenEditorPlants(
-    gardenId: number,
-    data: ReplaceGardenEditorPlantsPayload,
-  ) {
+  async replaceGardenEditorPlants(gardenId: number, data: ReplaceGardenEditorPlantsPayload) {
     const garden = await this.ensureGardenExists(gardenId);
     const validatedData = replaceGardenEditorPlantsSchema.parse(data);
     const shapes = await this.gardenEditorRepository.findByGardenId(gardenId);
@@ -71,9 +65,7 @@ export class GardenEditorService {
 
       const libraryPlant = await this.plantLibraryRepository.findById(plant.plantLibraryId);
       if (!libraryPlant) {
-        throw new NotFoundError(
-          `Plant library entry with ID ${plant.plantLibraryId} not found`,
-        );
+        throw new NotFoundError(`Plant library entry with ID ${plant.plantLibraryId} not found`);
       }
 
       if (!isPlantFootprintInsidePlantArea(plant, plantAreas, gridStepMeters)) {
@@ -97,10 +89,7 @@ export class GardenEditorService {
       }
     }
 
-    return await this.gardenEditorRepository.replaceGardenPlants(
-      gardenId,
-      validatedData.plants,
-    );
+    return await this.gardenEditorRepository.replaceGardenPlants(gardenId, validatedData.plants);
   }
 
   private async ensureGardenExists(gardenId: number) {

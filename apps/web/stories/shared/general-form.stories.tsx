@@ -130,9 +130,7 @@ function InteractiveGardenForm() {
           <Input
             id="garden-name"
             value={draft.name}
-            onChange={(event) =>
-              setDraft((current) => ({ ...current, name: event.target.value }))
-            }
+            onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value }))}
           />
         </Field>
         <ContentSection layout="twoColumn" gap="md">

@@ -153,11 +153,7 @@ export class PlantLibraryService {
 }
 
 function getSearchTerms(search?: string) {
-  return (search ?? '')
-    .trim()
-    .toLowerCase()
-    .split(/\s+/)
-    .filter(Boolean);
+  return (search ?? '').trim().toLowerCase().split(/\s+/).filter(Boolean);
 }
 
 function matchesPlantSearch(plant: PlantLibrary, searchTerms: string[]) {

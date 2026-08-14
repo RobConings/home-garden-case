@@ -147,10 +147,7 @@ export function GardenEditor({ garden }: { garden: Garden }) {
   const [canvasSize, setCanvasSize] = useState<CanvasSize>(defaultCanvasSize);
   const [canvasTheme, setCanvasTheme] = useState<CanvasTheme>(getCanvasTheme);
   const metrics = useMemo(() => createEditorMetrics(garden, canvasSize), [canvasSize, garden]);
-  const selectedPlantLibraryEntry = getPlantLibraryEntry(
-    plantLibrary,
-    selectedPlantLibraryId,
-  );
+  const selectedPlantLibraryEntry = getPlantLibraryEntry(plantLibrary, selectedPlantLibraryId);
   const selectedPlacedPlant = placedPlants.find((plant) => plant.id === selectedPlacedPlantId);
   const selectedShape = shapes.find((shape) => shape.id === selectedShapeId);
   const isSaving = saveFetcher.state !== 'idle';
@@ -258,9 +255,7 @@ export function GardenEditor({ garden }: { garden: Garden }) {
       return;
     }
 
-    setShapes((currentShapes) =>
-      currentShapes.filter((shape) => shape.id !== selectedShapeId),
-    );
+    setShapes((currentShapes) => currentShapes.filter((shape) => shape.id !== selectedShapeId));
     setSelectedShapeId(null);
     setSelectedPoint(null);
     setSelectedPlacedPlantId(null);
@@ -378,9 +373,7 @@ export function GardenEditor({ garden }: { garden: Garden }) {
     }
 
     setPlacedPlants((currentPlants) =>
-      currentPlants.map((currentPlant) =>
-        currentPlant.id === plantId ? nextPlant : currentPlant,
-      ),
+      currentPlants.map((currentPlant) => (currentPlant.id === plantId ? nextPlant : currentPlant)),
     );
     return true;
   }
@@ -399,13 +392,13 @@ export function GardenEditor({ garden }: { garden: Garden }) {
     >
       <div className="flex shrink-0 flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <p className="text-sm font-semibold uppercase tracking-wide text-[var(--rootly-primary)]">
+          <p className="text-sm font-semibold uppercase tracking-wide text-(--rootly-primary)">
             Garden editor
           </p>
-          <h1 className="mt-1 truncate text-2xl font-semibold text-[var(--rootly-text)]">
+          <h1 className="mt-1 truncate text-2xl font-semibold text-(--rootly-text)">
             {garden.gardenName}
           </h1>
-          <p className="mt-1 text-sm text-[var(--rootly-text-muted)]">
+          <p className="mt-1 text-sm text-(--rootly-text-muted)">
             {formatSize(garden.totalWidth)} x {formatSize(garden.totalHeight)} m drawing grid,{' '}
             {garden.gridSizeCm} cm spacing
           </p>
@@ -420,14 +413,14 @@ export function GardenEditor({ garden }: { garden: Garden }) {
 
       <Card className="xl:hidden">
         <CardContent className="grid gap-4 p-5">
-          <div className="flex h-12 w-12 items-center justify-center rounded-md bg-[var(--rootly-primary-soft)] text-[var(--rootly-primary)]">
+          <div className="flex h-12 w-12 items-center justify-center rounded-md bg-(--rootly-primary-soft) text-(--rootly-primary)">
             <Monitor aria-hidden="true" className="h-6 w-6" />
           </div>
           <div>
-            <h2 className="text-lg font-semibold text-[var(--rootly-text)]">
+            <h2 className="text-lg font-semibold text-(--rootly-text)">
               Editor available on larger screens
             </h2>
-            <p className="mt-2 text-sm leading-6 text-[var(--rootly-text-muted)]">
+            <p className="mt-2 text-sm leading-6 text-(--rootly-text-muted)">
               Use a desktop or a wider browser window to draw garden zones and place plants.
             </p>
           </div>
@@ -441,11 +434,11 @@ export function GardenEditor({ garden }: { garden: Garden }) {
       </Card>
 
       <Card className="hidden min-h-0 flex-1 flex-col overflow-hidden xl:flex">
-        <CardHeader className="border-b border-[var(--rootly-border)] p-4">
+        <CardHeader className="border-b border-(--rootly-border) p-4">
           <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
             <div className="min-w-0">
               <CardTitle>Drawing board</CardTitle>
-              <p className="mt-1 text-sm text-[var(--rootly-text-muted)]">
+              <p className="mt-1 text-sm text-(--rootly-text-muted)">
                 {editorMode === 'create'
                   ? draftPoints.length > 0
                     ? `${draftPoints.length} draft points`
@@ -459,7 +452,7 @@ export function GardenEditor({ garden }: { garden: Garden }) {
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-end">
               <div
                 aria-label="Shape type"
-                className="flex flex-wrap gap-2 rounded-md border border-[var(--rootly-border)] bg-[var(--rootly-surface-muted)] p-1"
+                className="flex flex-wrap gap-2 rounded-md border border-(--rootly-border) bg-(--rootly-surface-muted) p-1"
               >
                 {shapeOptions.map((option) => {
                   const isActive = option.value === activeType;
@@ -470,9 +463,8 @@ export function GardenEditor({ garden }: { garden: Garden }) {
                       type="button"
                       onClick={() => setActiveType(option.value)}
                       className={cn(
-                        'inline-flex h-9 items-center gap-2 rounded px-3 text-sm font-medium text-[var(--rootly-text-muted)] transition-colors hover:bg-[var(--rootly-surface)] hover:text-[var(--rootly-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--rootly-primary)]',
-                        isActive &&
-                          'bg-[var(--rootly-surface)] text-[var(--rootly-text)] shadow-sm',
+                        'inline-flex h-9 items-center gap-2 rounded px-3 text-sm font-medium text-(--rootly-text-muted) transition-colors hover:bg-(--rootly-surface) hover:text-(--rootly-text) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--rootly-primary)',
+                        isActive && 'bg-(--rootly-surface) text-(--rootly-text) shadow-sm',
                       )}
                       aria-pressed={isActive}
                     >
@@ -503,7 +495,7 @@ export function GardenEditor({ garden }: { garden: Garden }) {
         <CardContent className="flex min-h-0 flex-1 p-0">
           <div
             ref={boardRef}
-            className="relative min-h-0 flex-1 overflow-hidden bg-[var(--rootly-background)]"
+            className="relative min-h-0 flex-1 overflow-hidden bg-(--rootly-background)"
           >
             {konva ? (
               <GardenCanvas
@@ -531,13 +523,13 @@ export function GardenEditor({ garden }: { garden: Garden }) {
                 onMovePlant={movePlant}
               />
             ) : (
-              <div className="grid h-full place-items-center text-sm text-[var(--rootly-text-muted)]">
+              <div className="grid h-full place-items-center text-sm text-(--rootly-text-muted)">
                 Loading editor
               </div>
             )}
 
-            <div className="pointer-events-none absolute left-4 top-4 grid gap-2 rounded-md border border-[var(--rootly-border)] bg-[var(--rootly-surface)]/95 p-3 shadow-sm backdrop-blur">
-              <p className="text-xs font-semibold uppercase text-[var(--rootly-text)]">Legend</p>
+            <div className="pointer-events-none absolute left-4 top-4 grid gap-2 rounded-md border border-(--rootly-border) bg-(--rootly-surface)/95 p-3 shadow-sm backdrop-blur">
+              <p className="text-xs font-semibold uppercase text-(--rootly-text)">Legend</p>
               {shapeOptions.map((option) => (
                 <div key={option.value} className="flex items-center gap-2">
                   <span
@@ -545,25 +537,25 @@ export function GardenEditor({ garden }: { garden: Garden }) {
                     className="h-3.5 w-3.5 rounded border"
                     style={{ backgroundColor: option.fill, borderColor: option.stroke }}
                   />
-                  <span className="text-xs font-medium text-[var(--rootly-text-muted)]">
+                  <span className="text-xs font-medium text-(--rootly-text-muted)">
                     {option.label}
                   </span>
                 </div>
               ))}
             </div>
 
-            <div className="absolute right-4 top-4 grid w-[min(24rem,calc(100%-2rem))] gap-3 rounded-md border border-[var(--rootly-border)] bg-[var(--rootly-surface)]/95 p-4 shadow-sm backdrop-blur">
+            <div className="absolute right-4 top-4 grid w-[min(24rem,calc(100%-2rem))] gap-3 rounded-md border border-(--rootly-border) bg-(--rootly-surface)/95 p-4 shadow-sm backdrop-blur">
               <div
                 aria-label="Editor mode"
-                className="grid grid-cols-3 gap-1 rounded-md border border-[var(--rootly-border)] bg-[var(--rootly-surface-muted)] p-1"
+                className="grid grid-cols-3 gap-1 rounded-md border border-(--rootly-border) bg-(--rootly-surface-muted) p-1"
               >
                 <button
                   type="button"
                   onClick={() => changeEditorMode('create')}
                   className={cn(
-                    'inline-flex h-9 items-center justify-center gap-2 rounded px-3 text-sm font-medium text-[var(--rootly-text-muted)] transition-colors hover:bg-[var(--rootly-surface)] hover:text-[var(--rootly-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--rootly-primary)]',
+                    'inline-flex h-9 items-center justify-center gap-2 rounded px-3 text-sm font-medium text-(--rootly-text-muted) transition-colors hover:bg-(--rootly-surface) hover:text-(--rootly-text) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--rootly-primary)',
                     editorMode === 'create' &&
-                      'bg-[var(--rootly-surface)] text-[var(--rootly-text)] shadow-sm',
+                      'bg-(--rootly-surface) text-(--rootly-text) shadow-sm',
                   )}
                   aria-pressed={editorMode === 'create'}
                 >
@@ -574,9 +566,9 @@ export function GardenEditor({ garden }: { garden: Garden }) {
                   type="button"
                   onClick={() => changeEditorMode('select')}
                   className={cn(
-                    'inline-flex h-9 items-center justify-center gap-2 rounded px-3 text-sm font-medium text-[var(--rootly-text-muted)] transition-colors hover:bg-[var(--rootly-surface)] hover:text-[var(--rootly-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--rootly-primary)]',
+                    'inline-flex h-9 items-center justify-center gap-2 rounded px-3 text-sm font-medium text-(--rootly-text-muted) transition-colors hover:bg-(--rootly-surface) hover:text-(--rootly-text) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--rootly-primary)',
                     editorMode === 'select' &&
-                      'bg-[var(--rootly-surface)] text-[var(--rootly-text)] shadow-sm',
+                      'bg-(--rootly-surface) text-(--rootly-text) shadow-sm',
                   )}
                   aria-pressed={editorMode === 'select'}
                 >
@@ -587,9 +579,9 @@ export function GardenEditor({ garden }: { garden: Garden }) {
                   type="button"
                   onClick={() => changeEditorMode('plant')}
                   className={cn(
-                    'inline-flex h-9 items-center justify-center gap-2 rounded px-3 text-sm font-medium text-[var(--rootly-text-muted)] transition-colors hover:bg-[var(--rootly-surface)] hover:text-[var(--rootly-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--rootly-primary)]',
+                    'inline-flex h-9 items-center justify-center gap-2 rounded px-3 text-sm font-medium text-(--rootly-text-muted) transition-colors hover:bg-(--rootly-surface) hover:text-(--rootly-text) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--rootly-primary)',
                     editorMode === 'plant' &&
-                      'bg-[var(--rootly-surface)] text-[var(--rootly-text)] shadow-sm',
+                      'bg-(--rootly-surface) text-(--rootly-text) shadow-sm',
                   )}
                   aria-pressed={editorMode === 'plant'}
                 >
@@ -601,10 +593,10 @@ export function GardenEditor({ garden }: { garden: Garden }) {
               {editorMode === 'create' ? (
                 <>
                   <div>
-                    <p className="text-sm font-semibold text-[var(--rootly-text)]">
+                    <p className="text-sm font-semibold text-(--rootly-text)">
                       Drawing {getShapeOption(activeType).label.toLowerCase()}
                     </p>
-                    <p className="mt-1 text-xs text-[var(--rootly-text-muted)]">
+                    <p className="mt-1 text-xs text-(--rootly-text-muted)">
                       {draftPoints.length >= 3
                         ? `${draftPoints.length} points ready`
                         : `${Math.max(3 - draftPoints.length, 0)} more point${
@@ -647,13 +639,11 @@ export function GardenEditor({ garden }: { garden: Garden }) {
               ) : editorMode === 'plant' ? (
                 <>
                   <div className="grid gap-2">
-                    <label className="text-sm font-semibold text-[var(--rootly-text)]">
+                    <label className="text-sm font-semibold text-(--rootly-text)">
                       Plant from library
                       <Select
                         value={String(selectedPlantLibraryId)}
-                        onChange={(event) =>
-                          setSelectedPlantLibraryId(Number(event.target.value))
-                        }
+                        onChange={(event) => setSelectedPlantLibraryId(Number(event.target.value))}
                         className="mt-2"
                         disabled={plantLibrary.length === 0}
                       >
@@ -664,7 +654,7 @@ export function GardenEditor({ garden }: { garden: Garden }) {
                         ))}
                       </Select>
                     </label>
-                    <p className="text-xs text-[var(--rootly-text-muted)]">
+                    <p className="text-xs text-(--rootly-text-muted)">
                       {selectedPlantLibraryEntry
                         ? `${selectedPlantSize} x ${selectedPlantSize} grid ${
                             selectedPlantSize === 1 ? 'cell' : 'cells'
@@ -673,7 +663,7 @@ export function GardenEditor({ garden }: { garden: Garden }) {
                     </p>
                     <div
                       aria-label="Plant size"
-                      className="grid grid-cols-3 gap-1 rounded-md border border-[var(--rootly-border)] bg-[var(--rootly-surface-muted)] p-1"
+                      className="grid grid-cols-3 gap-1 rounded-md border border-(--rootly-border) bg-(--rootly-surface-muted) p-1"
                     >
                       {[1, 2, 3].map((size) => {
                         const plantSize = size as PlantSize;
@@ -685,9 +675,8 @@ export function GardenEditor({ garden }: { garden: Garden }) {
                             type="button"
                             onClick={() => setSelectedPlantSize(plantSize)}
                             className={cn(
-                              'inline-flex h-8 items-center justify-center rounded px-2 text-sm font-medium text-[var(--rootly-text-muted)] transition-colors hover:bg-[var(--rootly-surface)] hover:text-[var(--rootly-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--rootly-primary)]',
-                              isActive &&
-                                'bg-[var(--rootly-surface)] text-[var(--rootly-text)] shadow-sm',
+                              'inline-flex h-8 items-center justify-center rounded px-2 text-sm font-medium text-(--rootly-text-muted) transition-colors hover:bg-(--rootly-surface) hover:text-(--rootly-text) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--rootly-primary)',
+                              isActive && 'bg-(--rootly-surface) text-(--rootly-text) shadow-sm',
                             )}
                             aria-pressed={isActive}
                           >
@@ -698,11 +687,11 @@ export function GardenEditor({ garden }: { garden: Garden }) {
                     </div>
                   </div>
                   {selectedPlacedPlant ? (
-                    <div className="grid gap-2 border-t border-[var(--rootly-border)] pt-3">
-                      <p className="text-sm font-semibold text-[var(--rootly-text)]">
+                    <div className="grid gap-2 border-t border-(--rootly-border) pt-3">
+                      <p className="text-sm font-semibold text-(--rootly-text)">
                         {getPlacedPlantName(selectedPlacedPlant, plantLibrary)}
                       </p>
-                      <p className="text-xs text-[var(--rootly-text-muted)]">
+                      <p className="text-xs text-(--rootly-text-muted)">
                         {formatPoint(selectedPlacedPlant)}, {selectedPlacedPlant.size} x{' '}
                         {selectedPlacedPlant.size}
                       </p>
@@ -717,7 +706,7 @@ export function GardenEditor({ garden }: { garden: Garden }) {
                       </Button>
                     </div>
                   ) : (
-                    <p className="text-sm text-[var(--rootly-text-muted)]">
+                    <p className="text-sm text-(--rootly-text-muted)">
                       Click inside a plant area to place a plant.
                     </p>
                   )}
@@ -725,10 +714,10 @@ export function GardenEditor({ garden }: { garden: Garden }) {
               ) : selectedShape ? (
                 <>
                   <div>
-                    <p className="text-sm font-semibold text-[var(--rootly-text)]">
+                    <p className="text-sm font-semibold text-(--rootly-text)">
                       {getShapeOption(selectedShape.type).label}
                     </p>
-                    <p className="mt-1 text-xs text-[var(--rootly-text-muted)]">
+                    <p className="mt-1 text-xs text-(--rootly-text-muted)">
                       {selectedPoint
                         ? `Point ${selectedPoint.pointIndex + 1} of ${
                             selectedShape.points.length
@@ -750,30 +739,30 @@ export function GardenEditor({ garden }: { garden: Garden }) {
                   </div>
                 </>
               ) : (
-                <p className="text-sm text-[var(--rootly-text-muted)]">
+                <p className="text-sm text-(--rootly-text-muted)">
                   {draftPoints.length > 0
                     ? 'Draft paused. Switch to Create to continue it.'
                     : 'Select a shape or point to adjust it.'}
                 </p>
               )}
 
-              <div className="grid gap-2 border-t border-[var(--rootly-border)] pt-3">
+              <div className="grid gap-2 border-t border-(--rootly-border) pt-3">
                 <div className="flex items-center justify-between gap-3">
-                  <span className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--rootly-text)]">
-                    <Sun aria-hidden="true" className="h-4 w-4 text-[var(--rootly-accent)]" />
+                  <span className="inline-flex items-center gap-2 text-sm font-semibold text-(--rootly-text)">
+                    <Sun aria-hidden="true" className="h-4 w-4 text-(--rootly-accent)" />
                     Sun
                   </span>
-                  <span className="text-xs font-medium text-[var(--rootly-text-muted)]">
+                  <span className="text-xs font-medium text-(--rootly-text-muted)">
                     {formatSunTime(sunTime)}
                   </span>
                 </div>
-                <label className="flex items-center justify-between gap-3 text-sm font-medium text-[var(--rootly-text)]">
+                <label className="flex items-center justify-between gap-3 text-sm font-medium text-(--rootly-text)">
                   <span>Show sun</span>
                   <input
                     type="checkbox"
                     checked={showSun}
                     onChange={(event) => setShowSun(event.target.checked)}
-                    className="h-4 w-4 accent-[var(--rootly-accent)]"
+                    className="h-4 w-4 accent-(--rootly-accent)"
                   />
                 </label>
                 <input
@@ -783,19 +772,19 @@ export function GardenEditor({ garden }: { garden: Garden }) {
                   step={0.5}
                   value={sunTime}
                   onChange={(event) => setSunTime(Number(event.target.value))}
-                  className="h-2 w-full cursor-pointer accent-[var(--rootly-accent)]"
+                  className="h-2 w-full cursor-pointer accent-(--rootly-accent)"
                   aria-label="Time of day"
                 />
-                <div className="flex justify-between text-[11px] font-medium text-[var(--rootly-text-muted)]">
+                <div className="flex justify-between text-[11px] font-medium text-(--rootly-text-muted)">
                   <span>Morning</span>
                   <span>{getDirectionLabel(garden.sunDirection)} exposure</span>
                   <span>Evening</span>
                 </div>
               </div>
             </div>
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+        </CardContent>
+      </Card>
     </PageContainer>
   );
 }
@@ -961,7 +950,8 @@ function GardenCanvas({
           const footprintSize = getPlantFootprintMeters(plant, metrics) * metrics.scale;
           const isSelected = plant.id === selectedPlacedPlantId;
           const receivesSun =
-            showSun && !isLightBlocked(
+            showSun &&
+            !isLightBlocked(
               toCanvasPoint(getPlantCenterPoint(plant, metrics), metrics),
               metrics,
               shapes,
@@ -976,11 +966,7 @@ function GardenCanvas({
               draggable={editorMode !== 'create'}
               dragBoundFunc={(position: { x: number; y: number }) =>
                 toCanvasPoint(
-                  clampPlantGardenPoint(
-                    toGardenPoint(position, metrics),
-                    metrics,
-                    plant.size,
-                  ),
+                  clampPlantGardenPoint(toGardenPoint(position, metrics), metrics, plant.size),
                   metrics,
                 )
               }
@@ -1591,7 +1577,11 @@ function getFirstLightBlockPoint(
 function isPointInPolygon(point: GardenPoint, polygon: GardenPoint[]) {
   let isInside = false;
 
-  for (let index = 0, previousIndex = polygon.length - 1; index < polygon.length; previousIndex = index++) {
+  for (
+    let index = 0, previousIndex = polygon.length - 1;
+    index < polygon.length;
+    previousIndex = index++
+  ) {
     const currentPoint = polygon[index];
     const previousPoint = polygon[previousIndex];
     const intersects =

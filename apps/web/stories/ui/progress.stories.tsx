@@ -14,7 +14,11 @@ function ProgressDemo() {
       </div>
       <Progress value={value} max={24} />
       <div className="flex gap-2">
-        <Button size="sm" variant="secondary" onClick={() => setValue((current) => Math.max(0, current - 2))}>
+        <Button
+          size="sm"
+          variant="secondary"
+          onClick={() => setValue((current) => Math.max(0, current - 2))}
+        >
           Remove
         </Button>
         <Button size="sm" onClick={() => setValue((current) => Math.min(24, current + 2))}>

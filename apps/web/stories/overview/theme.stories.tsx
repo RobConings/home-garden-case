@@ -7,7 +7,10 @@ import { Badge } from '@/components/ui/badge';
 function ThemeSwatch({ name, value }: { name: string; value: string }) {
   return (
     <div className="rounded-md border border-[var(--rootly-border)] bg-[var(--rootly-surface)] p-3">
-      <div className="mb-3 h-12 rounded-md border border-[var(--rootly-border)]" style={{ background: value }} />
+      <div
+        className="mb-3 h-12 rounded-md border border-[var(--rootly-border)]"
+        style={{ background: value }}
+      />
       <p className="text-sm font-medium text-[var(--rootly-text)]">{name}</p>
       <p className="mt-1 text-xs text-[var(--rootly-text-muted)]">{value}</p>
     </div>

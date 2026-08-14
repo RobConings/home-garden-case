@@ -4,7 +4,14 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 
 const samplePlants = [
   { name: 'Tomatoes', type: 'Vegetable', area: 4, humidity: '70%' },
@@ -43,7 +50,9 @@ function CapacityTable() {
               variant={selected ? 'primary' : 'secondary'}
               onClick={() =>
                 setSelectedPlants((current) =>
-                  selected ? current.filter((item) => item.name !== plant.name) : [...current, plant],
+                  selected
+                    ? current.filter((item) => item.name !== plant.name)
+                    : [...current, plant],
                 )
               }
             >
