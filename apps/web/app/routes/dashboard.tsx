@@ -1,5 +1,5 @@
 import type { LoaderFunctionArgs, MetaFunction } from '@remix-run/node';
-import { Outlet, useLoaderData } from '@remix-run/react';
+import { Outlet } from '@remix-run/react';
 import { DashboardShell } from '@/features/dashboard/components';
 import { requireUser } from '@/lib/session.server';
 import { MessageProvider } from '@/providers/message-provider';
@@ -13,18 +13,16 @@ export const meta: MetaFunction = () => [
 ];
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const user = await requireUser(request);
+  await requireUser(request);
 
-  return { user };
+  return null;
 }
 
 export default function Dashboard() {
-  const { user } = useLoaderData<typeof loader>();
-
   return (
-    <DashboardShell user={user}>
+    <DashboardShell>
       <MessageProvider>
-        <Outlet context={{ user }} />
+        <Outlet />
       </MessageProvider>
     </DashboardShell>
   );

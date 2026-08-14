@@ -6,15 +6,15 @@ import { EmptyState, PageTitle, StatCard, ThemeToggle } from '@/components/share
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import type { UserSession } from '@/lib/session.server';
+import { type CurrentUser, useCurrentUser } from '@/providers';
 import { DashboardSidebar } from './dashboard-sidebar';
 
 type DashboardShellProps = {
-  user: UserSession;
   children?: ReactNode;
 };
 
-export function DashboardShell({ user, children }: DashboardShellProps) {
+export function DashboardShell({ children }: DashboardShellProps) {
+  const user = useRequiredCurrentUser();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   return (
@@ -27,12 +27,13 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
         />
       }
     >
-      {children ?? <DashboardHome user={user} />}
+      {children ?? <DashboardHome />}
     </AppShell>
   );
 }
 
-export function DashboardHome({ user }: DashboardShellProps) {
+export function DashboardHome() {
+  const user = useRequiredCurrentUser();
   const displayName =
     [user.firstName, user.lastName].filter(Boolean).join(' ') || 'Rootly gardener';
   const firstName = user.firstName || 'gardener';
@@ -109,7 +110,7 @@ export function DashboardHome({ user }: DashboardShellProps) {
   );
 }
 
-function DashboardHeader({ user }: DashboardShellProps) {
+function DashboardHeader({ user }: { user: CurrentUser }) {
   return (
     <PageContainer size="full" className="flex h-16 items-center justify-between py-0">
       <Link to="/dashboard" aria-label="Go to Rootly dashboard" className="flex items-center">
@@ -129,4 +130,14 @@ function DashboardHeader({ user }: DashboardShellProps) {
       </PageRow>
     </PageContainer>
   );
+}
+
+function useRequiredCurrentUser() {
+  const { user } = useCurrentUser();
+
+  if (!user) {
+    throw new Error('Dashboard routes require an authenticated user.');
+  }
+
+  return user;
 }

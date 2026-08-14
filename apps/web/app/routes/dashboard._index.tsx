@@ -1,11 +1,5 @@
 import type { MetaFunction } from '@remix-run/node';
-import { useOutletContext } from '@remix-run/react';
 import { DashboardHome } from '@/features/dashboard/components';
-import type { UserSession } from '@/lib/session.server';
-
-type DashboardOutletContext = {
-  user: UserSession;
-};
 
 export const meta: MetaFunction = () => [
   { title: 'Dashboard | Rootly' },
@@ -16,7 +10,5 @@ export const meta: MetaFunction = () => [
 ];
 
 export default function DashboardIndex() {
-  const { user } = useOutletContext<DashboardOutletContext>();
-
-  return <DashboardHome user={user} />;
+  return <DashboardHome />;
 }
