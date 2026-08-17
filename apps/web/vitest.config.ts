@@ -6,11 +6,14 @@ import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 export default defineConfig(() => ({
   root: __dirname,
   cacheDir: '../../node_modules/.vite/apps/web',
+
   plugins: [react(), nxViteTsPaths()],
-  // Uncomment this if you are using workers.
-  // worker: {
-  //  plugins: [],
-  // },
+
+  server: {
+    host: '0.0.0.0',
+    allowedHosts: ['dev.realpic.be'],
+  },
+
   test: {
     setupFiles: ['test-setup.ts'],
     name: '@itp-home-garden/web',
